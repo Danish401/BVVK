@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import PrintButton from './components/PrintButton'
@@ -106,7 +106,7 @@ const headerSupplierCell = (
   </td>
 )
 
-export default function QuotationPage() {
+function QuotationPageContent() {
   const searchParams = useSearchParams()
   const [quotationData, setQuotationData] = useState<any>(null)
   const [rawQuotationData, setRawQuotationData] = useState<ZohoQuotation | null>(null)
@@ -388,5 +388,17 @@ export default function QuotationPage() {
         </>
       )}
     </main>
+  )
+}
+
+export default function QuotationPage() {
+  return (
+    <Suspense fallback={
+      <main style={{ padding: '20px', textAlign: 'center' }}>
+        <div>Loading quotation...</div>
+      </main>
+    }>
+      <QuotationPageContent />
+    </Suspense>
   )
 }

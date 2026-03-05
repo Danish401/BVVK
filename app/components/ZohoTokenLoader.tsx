@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 
-export default function ZohoTokenLoader() {
+function ZohoTokenLoaderContent() {
   const searchParams = useSearchParams()
 
   useEffect(() => {
@@ -38,4 +38,12 @@ export default function ZohoTokenLoader() {
   }, [searchParams])
 
   return null
+}
+
+export default function ZohoTokenLoader() {
+  return (
+    <Suspense fallback={null}>
+      <ZohoTokenLoaderContent />
+    </Suspense>
+  )
 }
