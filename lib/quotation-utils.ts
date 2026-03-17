@@ -107,7 +107,7 @@ export function numberToWords(num: number): string {
  * Maps Template field value to Category data field names
  * Returns object with lineItemsField and productDetailsField
  */
-export function getCategoryFieldsFromTemplate(templateField?: string): {
+export function getCategoryFieldsFromTemplate(templateField?: string, zohoData?: ZohoQuotation): {
   lineItemsField: keyof ZohoQuotation
   productDetailsField: keyof ZohoQuotation
 } {
@@ -118,25 +118,58 @@ export function getCategoryFieldsFromTemplate(templateField?: string): {
     }
   }
 
-  const template = templateField.trim()
+  const template = templateField.trim().toLowerCase()
   
   // Map Template field to Category fields
-  if (template.includes('Category 2 WMW') || template === 'Category 2 WMW') {
+  if (template.includes('gkd')) {
+    // For GKD, check which category has data - prefer WMW if it has items, otherwise use WI
+    if (zohoData) {
+      const wmwItems = (zohoData.Category_1_MM_Database_WMW_2_0 as any[]) || []
+      const wiItems = (zohoData.Category_1_MM_Database_WI_2_0 as any[]) || []
+      
+      if (wmwItems.length > 0) {
+        return {
+          lineItemsField: 'Category_1_MM_Database_WMW_2_0',
+          productDetailsField: 'Category_1_MM_Database_WMW'
+        }
+      } else if (wiItems.length > 0) {
+        return {
+          lineItemsField: 'Category_1_MM_Database_WI_2_0',
+          productDetailsField: 'Category_1_MM_Database_WI'
+        }
+      }
+    }
+    // Default to WI if no data found
+    return {
+      lineItemsField: 'Category_1_MM_Database_WI_2_0',
+      productDetailsField: 'Category_1_MM_Database_WI'
+    }
+  } else if (template.includes('sls')) {
+    return {
+      lineItemsField: 'Category_1_MM_Database_WI_2_0',
+      productDetailsField: 'Category_1_MM_Database_WI'
+    }
+  } else if (template.includes('bvk')) {
+    return {
+      lineItemsField: 'Category_1_MM_Database_WI_2_0',
+      productDetailsField: 'Category_1_MM_Database_WI'
+    }
+  } else if (template.includes('category 2 wmw') || template === 'category 2 wmw') {
     return {
       lineItemsField: 'Category_2_MM_Database_WMW_2_0',
       productDetailsField: 'Category_2_MM_Database_WMW'
     }
-  } else if (template.includes('Category 1 MM Database WMW') || template === 'Category 1 MM Database WMW') {
+  } else if (template.includes('category 1 mm database wmw') || template === 'category 1 mm database wmw') {
     return {
       lineItemsField: 'Category_1_MM_Database_WMW_2_0',
       productDetailsField: 'Category_1_MM_Database_WMW'
     }
-  } else if (template.includes('Category 2 MM Database WI') || template.includes('Category 2 WI')) {
+  } else if (template.includes('category 2 mm database wi') || template.includes('category 2 wi')) {
     return {
       lineItemsField: 'Category_2_MM_Database_WI_2_0',
       productDetailsField: 'Category_2_MM_Database_WI'
     }
-  } else if (template.includes('Category 1 MM Database WI') || template.includes('Category 1 WI')) {
+  } else if (template.includes('category 1 mm database wi') || template.includes('category 1 wi')) {
     return {
       lineItemsField: 'Category_1_MM_Database_WI_2_0',
       productDetailsField: 'Category_1_MM_Database_WI'
@@ -157,8 +190,24 @@ export function determineTemplateType(
   typeOfQuotation?: string,
   templateField?: string
 ): TemplateType {
-  // If Type_Of_Quotation is "Export", always use EXPORT template
-  if (typeOfQuotation?.trim().toLowerCase() === 'export') {
+  const typeOfQuot = typeOfQuotation?.trim().toLowerCase() || ''
+  const template = templateField?.trim().toLowerCase() || ''
+  
+  // If Type_Of_Quotation is "Export" or "Import" AND Template is "Category 1 WI" or "Category 2 WI", use SLS template
+  if ((typeOfQuot === 'export' || typeOfQuot === 'import') && 
+      (template.includes('category 1 wi') || template.includes('category 2 wi') || 
+       template.includes('category 1 mm database wi') || template.includes('category 2 mm database wi'))) {
+    return 'SLS'
+  }
+  
+  // If Type_Of_Quotation is "Export" AND Template is "Category 1 WMW", use EXPORT template
+  if (typeOfQuot === 'export' && 
+      (template.includes('category 1 wmw') || template.includes('category 1 mm database wmw'))) {
+    return 'EXPORT'
+  }
+  
+  // If Type_Of_Quotation is "Export" (and not matching conditions above), use EXPORT template
+  if (typeOfQuot === 'export') {
     return 'EXPORT'
   }
   
@@ -167,14 +216,18 @@ export function determineTemplateType(
     return 'WI' // Default
   }
   
-  const template = templateField.trim()
-  
   // Map Template field to template type
-  if (template.includes('Category 2 WMW') || template === 'Category 2 WMW') {
+  if (template.includes('gkd')) {
+    return 'GKD'
+  } else if (template.includes('sls')) {
+    return 'SLS'
+  } else if (template.includes('bvk')) {
+    return 'BVK'
+  } else if (template.includes('category 2 wmw') || template === 'category 2 wmw') {
     return 'WMW2'
-  } else if (template.includes('Category 1 MM Database WMW') || template === 'Category 1 MM Database WMW') {
+  } else if (template.includes('category 1 mm database wmw') || template === 'category 1 mm database wmw') {
     return 'WMW'
-  } else if (template.includes('Category 1 MM Database WI') || template.includes('Category 1 WI')) {
+  } else if (template.includes('category 1 mm database wi') || template.includes('category 1 wi')) {
     return 'WI'
   }
   
@@ -196,10 +249,11 @@ export function transformQuotationData(
   // Get Category fields based on templateField if provided, otherwise use templateType
   let zohoLineItems: any[] = []
   let productDetails: any[] = []
+  let categoryFields: { lineItemsField: keyof ZohoQuotation; productDetailsField: keyof ZohoQuotation } | null = null
   
   if (templateField) {
     // Use templateField to determine Category fields
-    const categoryFields = getCategoryFieldsFromTemplate(templateField)
+    categoryFields = getCategoryFieldsFromTemplate(templateField, zohoData)
     zohoLineItems = (zohoData[categoryFields.lineItemsField] as any[]) || []
     productDetails = (zohoData[categoryFields.productDetailsField] as any[]) || []
   } else {
@@ -247,8 +301,13 @@ export function transformQuotationData(
     return ''
   }
 
-  if (templateType === 'WMW' || templateType === 'WMW2') {
-    // WMW template uses different structure
+  // Check if we're using WMW category fields (for GKD, SLS, BVK that might use WMW data)
+  const isUsingWMWCategories = categoryFields && categoryFields.lineItemsField
+    ? String(categoryFields.lineItemsField).includes('WMW')
+    : (templateType === 'WMW' || templateType === 'WMW2')
+
+  if (templateType === 'WMW' || templateType === 'WMW2' || isUsingWMWCategories) {
+    // WMW template uses different structure (also used by GKD/SLS/BVK when they have WMW data)
     zohoLineItems.forEach((item, index) => {
       // Try to find matching product detail by Last_item_ref (capital L) or last_item_ref (lowercase) or Line_Item_ref
       const itemRef = (item as any).Last_item_ref?.trim() || item.last_item_ref?.trim() || item.Line_Item_ref?.trim()

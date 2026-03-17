@@ -298,10 +298,52 @@ function QuotationPageContent() {
     )
   )
 
+  const allTemplates: TemplateType[] = ['WI', 'WMW', 'WMW2', 'EXPORT', 'SLS', 'GKD', 'BVK']
+
   return (
     <main className="quotation-doc" style={{ padding: '16px' }}>
-      <div className="no-print" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '16px' }}>
-        <PrintButton />
+      <div className="no-print" style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
+          <PrintButton />
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', flexWrap: 'wrap', padding: '12px', backgroundColor: '#f5f5f5', borderRadius: '8px', border: '1px solid #ddd' }}>
+          <div style={{ fontWeight: 'bold', marginRight: '8px', color: '#666' }}>Test Templates:</div>
+          {allTemplates.map((template) => (
+            <button
+              key={template}
+              onClick={() => {
+                setTemplateType(template)
+                if (rawQuotationData) {
+                  const transformed = transformQuotationData(rawQuotationData, template, rawQuotationData.Template)
+                  setQuotationData(transformed)
+                }
+              }}
+              style={{
+                padding: '6px 12px',
+                fontSize: '12px',
+                fontWeight: templateType === template ? 'bold' : 'normal',
+                backgroundColor: templateType === template ? '#1e40af' : '#fff',
+                color: templateType === template ? '#fff' : '#333',
+                border: `1px solid ${templateType === template ? '#1e40af' : '#ccc'}`,
+                borderRadius: '4px',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={(e) => {
+                if (templateType !== template) {
+                  e.currentTarget.style.backgroundColor = '#e5e7eb'
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (templateType !== template) {
+                  e.currentTarget.style.backgroundColor = '#fff'
+                }
+              }}
+            >
+              {template}
+            </button>
+          ))}
+        </div>
       </div>
 
       {loading && (
