@@ -3,6 +3,10 @@
 import Link from 'next/link'
 import { QuotationData } from '@/lib/types'
 import { formatCurrency } from '@/lib/quotation-utils'
+import GoodsDescriptionPaginatedBlock from './GoodsDescriptionPaginatedBlock'
+import QuotationSummarySection from './QuotationSummarySection'
+import QuotationInvoiceFooter from './QuotationInvoiceFooter'
+import QuotationHeaderThead from './QuotationHeaderThead'
 
 interface QuotationContentProps {
   data: QuotationData
@@ -10,33 +14,6 @@ interface QuotationContentProps {
   billingData?: any
   rawQuotationData?: any
 }
-
-const headerSupplierCell = (
-  <td style={{ width: '55%', verticalAlign: 'top', border: '1px solid #000', padding: '12px' }}>
-    <div style={{ marginBottom: '8px', fontWeight: 'bold' }}>Supplier</div>
-    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-      <div style={{ width: '48px', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-        <img 
-          src="/wmw-logo.png" 
-          alt="WMW Logo" 
-          style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
-          onError={(e) => {
-            console.error('Logo failed to load:', e);
-            e.currentTarget.style.display = 'none';
-          }}
-        />
-      </div>
-      <div style={{ fontWeight: 'bold', fontSize: '12px' }}>METAL FABRICS</div>
-    </div>
-    <div style={{ fontWeight: 'bold' }}>WMW Metal Fabrics Ltd</div>
-    <div>53, Industrial Area, Jhotwara, Jaipur-302012, Rajasthan, India</div>
-    <div>Tel: +91.141.7105151</div>
-    <div>www.wmwindia.com</div>
-    <div>info@wmwindia.com</div>
-    <div>GSTIN: 08AAACW2620D1Z8</div>
-    <div>CIN: U27109WB1995PLC068681</div>
-  </td>
-)
 
 export default function QuotationContent({ data, shippingData, billingData, rawQuotationData }: QuotationContentProps) {
   // Direct field mapping for tax values
@@ -49,260 +26,45 @@ export default function QuotationContent({ data, shippingData, billingData, rawQ
   const taxAmount = parseFloat(rawQuotationData?.Tax_Amount || '0') || 0
   const totalAfterTax = parseFloat(rawQuotationData?.Total_After_Tax || rawQuotationData?.Total_Amount_After_GST || '0') || data.totalAmount
 
-  const headerQuotationCell = (
-    <td style={{ width: '45%', verticalAlign: 'top', border: '1px solid #000', padding: '12px' }}>
-      <table style={{ width: '100%', border: 'none' }}>
-        <tbody>
-          <tr><td style={{ border: 'none', padding: '4px 0' }}><strong>Quotation No</strong></td><td style={{ border: 'none', padding: '4px 0' }}>{data.quotationNumber}</td></tr>
-          <tr><td style={{ border: 'none', padding: '4px 0' }}><strong>Date</strong></td><td style={{ border: 'none', padding: '4px 0' }}>{data.date}</td></tr>
-          <tr><td style={{ border: 'none', padding: '4px 0' }}><strong>Buyer&apos;s Enquiry No</strong></td><td style={{ border: 'none', padding: '4px 0' }}>{data.buyerEnquiryNo || ''}</td></tr>
-          <tr><td style={{ border: 'none', padding: '4px 0' }}><strong>Terms Of Payment</strong></td><td style={{ border: 'none', padding: '4px 0' }}>{data.termsOfPayment || ''}</td></tr>
-          <tr><td style={{ border: 'none', padding: '4px 0' }}><strong>Inco Terms</strong></td><td style={{ border: 'none', padding: '4px 0' }}>{data.incoTerms || ''}</td></tr>
-          <tr><td style={{ border: 'none', padding: '4px 0' }}><strong>Terms Of Delivery</strong></td><td style={{ border: 'none', padding: '4px 0' }}>{data.termsOfDelivery || ''}</td></tr>
-        </tbody>
-      </table>
-    </td>
-  )
-
   const totalAmount = formatCurrency(data.totalAmount)
+  const lineItems = data.lineItems ?? []
 
   return (
     <>
       {/* Quotation Content Div - All content until Remarks */}
-      <div className="quotation-content-section" style={{ border: '1px solid #000', padding: '16px', marginBottom: '24px' }}>
-      {/* Title - Show at the top of first page only */}
-      <p className="quotation-title" style={{ textAlign: 'center', fontSize: '22px', fontWeight: 'bold', marginBottom: '16px', textTransform: 'uppercase', marginTop: 0 }}>
-        QUOTATION
-      </p>
-      
-      <table style={{ width: '100%', borderCollapse: 'collapse', border: 'none' }}>
-        <thead className="repeating-header">
-          <tr>
-            {headerSupplierCell}
-            {headerQuotationCell}
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td colSpan={2} style={{ border: 'none', padding: 0 }}>
-
-      {/* Consignee and Recipient */}
-      <table style={{ marginTop: '12px' }}>
-        <tbody>
-          <tr>
-            <td style={{ width: '50%', border: '1px solid #000', padding: '12px', verticalAlign: 'top' }}>
-              <div className="section-title">Detail Of Consignee/Shipped To</div>
-              {shippingData ? (
-                <>
-                  {shippingData.Shipping_Address_Name && (
-                    <div style={{ fontWeight: 'bold', marginTop: '6px' }}>{shippingData.Shipping_Address_Name}</div>
-                  )}
-                  {shippingData.Parent_Account && (
-                    <div style={{ fontWeight: 'bold', marginTop: '4px' }}>{shippingData.Parent_Account}</div>
-                  )}
-                  {shippingData.Shipping_Street && (
-                    <div>{shippingData.Shipping_Street}</div>
-                  )}
-                  {shippingData.Shipping_City && (
-                    <div>
-                      {shippingData.Shipping_City}
-                      {shippingData.Shipping_State && `, ${shippingData.Shipping_State}`}
-                      {shippingData.Shipping_Postal_Code && ` ${shippingData.Shipping_Postal_Code}`}
-                    </div>
-                  )}
-                  {shippingData.Shipping_Country && (
-                    <div>{shippingData.Shipping_Country}</div>
-                  )}
-                  <table style={{ marginTop: '8px', width: '100%' }}>
-                    <tbody>
-                      {shippingData.Shipping_State && (
-                        <tr><td style={{ padding: '4px' }}>State</td><td style={{ padding: '4px' }}>{shippingData.Shipping_State}</td></tr>
-                      )}
-                      {shippingData.Shipping_GST_No && (
-                        <tr><td style={{ padding: '4px' }}>GST Number</td><td style={{ padding: '4px' }}>{shippingData.Shipping_GST_No}</td></tr>
-                      )}
-                    </tbody>
-                  </table>
-                </>
-              ) : (
-                <div style={{ marginTop: '6px', fontStyle: 'italic', color: '#666' }}>No shipping data available</div>
-              )}
-            </td>
-            <td style={{ width: '50%', border: '1px solid #000', padding: '12px', verticalAlign: 'top' }}>
-              <div className="section-title">Detail Of Recipient/Billed To</div>
-              {billingData ? (
-                <>
-                  {billingData.Billing_Address_Name && (
-                    <div style={{ fontWeight: 'bold', marginTop: '6px' }}>{billingData.Billing_Address_Name}</div>
-                  )}
-                  {billingData.Parent_Account && (
-                    <div style={{ fontWeight: 'bold', marginTop: '4px' }}>{billingData.Parent_Account}</div>
-                  )}
-                  {billingData.Billing_Street && (
-                    <div>{billingData.Billing_Street}</div>
-                  )}
-                  {billingData.Billing_City && (
-                    <div>
-                      {billingData.Billing_City}
-                      {billingData.Billing_State && `, ${billingData.Billing_State}`}
-                      {billingData.Billing_Postal_Code && ` ${billingData.Billing_Postal_Code}`}
-                    </div>
-                  )}
-                  {billingData.Billing_Country && (
-                    <div>{billingData.Billing_Country}</div>
-                  )}
-                  <table style={{ marginTop: '8px', width: '100%' }}>
-                    <tbody>
-                      {billingData.Billing_State && (
-                        <tr><td style={{ padding: '4px' }}>State</td><td style={{ padding: '4px' }}>{billingData.Billing_State}</td></tr>
-                      )}
-                      {billingData.Billing_GST_No && (
-                        <tr><td style={{ padding: '4px' }}>GST Number</td><td style={{ padding: '4px' }}>{billingData.Billing_GST_No}</td></tr>
-                      )}
-                    </tbody>
-                  </table>
-                </>
-              ) : (
-                <div style={{ marginTop: '6px', fontStyle: 'italic', color: '#666' }}>No billing data available</div>
-              )}
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-      {/* Description Of Goods */}
-      <div className="section-title" style={{ marginTop: '12px' }}>Description Of Goods</div>
-      <table className="goods-description-table">
-        <thead>
-          <tr>
-            <th style={{ width: '40%', textAlign: 'left' }}>Product / Quality / Form / Size / Type</th>
-            <th style={{ width: '12%' }}>Delivery</th>
-            <th style={{ width: '8%' }}>UOM</th>
-            <th style={{ width: '15%' }}>Quantity</th>
-            <th style={{ width: '12%', textAlign: 'right' }}>Rate/SQM</th>
-            <th style={{ width: '13%', textAlign: 'right' }}>Amount INR</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.lineItems.length > 0 ? (
-            data.lineItems.map((row, i) => (
-              <tr key={i}>
-                <td style={{ verticalAlign: 'top' }}>
-                  <div><strong>Product</strong>: {row.product}</div>
-                  {row.quality && <div><strong>Quality</strong>: {row.quality}</div>}
-                  {row.form && <div><strong>Form</strong>: {row.form}</div>}
-                  {row.size && <div><strong>Size</strong>: {row.size}</div>}
-                  {row.type && <div><strong>Type</strong>: {row.type}</div>}
-                </td>
-                <td>{row.delivery}</td>
-                <td>{row.uom}</td>
-                <td>
-                  {row.qty}
-                  {row.pieces && <><br />{row.pieces}</>}
-                </td>
-                <td className="text-right">{row.rate}</td>
-                <td className="text-right">{row.amount}</td>
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan={6} style={{ textAlign: 'center', padding: '20px', color: '#666' }}>
-                No line items found
+      <div className="quotation-print-sheet">
+        <div className="quotation-content-section quotation-content-section--seamless print-content" style={{ marginBottom: '24px' }}>
+        <table className="quotation-header-master-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <QuotationHeaderThead data={data} shippingData={shippingData} billingData={billingData} />
+          <tbody>
+            <tr className="quotation-master-body-row quotation-master-body-row--goods">
+              <td colSpan={2} className="quotation-seamless-stack">
+                <GoodsDescriptionPaginatedBlock lineItems={lineItems} />
               </td>
             </tr>
-          )}
-        </tbody>
-        <tfoot>
-          <tr>
-            <td colSpan={5} className="text-right font-bold">Total {data.currency}</td>
-            <td className="text-right font-bold">{totalAmount}</td>
-          </tr>
-        </tfoot>
-      </table>
+            <tr className="quotation-master-body-row quotation-master-body-row--summary">
+              <td colSpan={2} className="quotation-seamless-stack">
+                <QuotationSummarySection
+                  data={data}
+                  totalAmountFormatted={totalAmount}
+                  cgstRate={cgstRate}
+                  cgstAmount={cgstAmount}
+                  sgstRate={sgstRate}
+                  sgstAmount={sgstAmount}
+                  igstRate={igstRate}
+                  igstAmount={igstAmount}
+                  taxAmount={taxAmount}
+                  totalAfterTax={totalAfterTax}
+                />
 
-      {/* Bottom section: Validity, Charges, Notes (left) | Calculation (right) */}
-      <table style={{ marginTop: '12px' }}>
-        <tbody>
-          <tr>
-            <td style={{ width: '55%', verticalAlign: 'top', border: '1px solid #000', padding: '12px' }}>
-              <div style={{ marginBottom: '8px' }}><strong>QUOTATION VALIDITY:</strong> 07 Days from the date of Quotation</div>
-              <table style={{ marginBottom: '12px' }}>
-                <thead>
-                  <tr>
-                    <th></th>
-                    <th>Freight</th>
-                    <th>Insurance</th>
-                    <th>Packing</th>
-                    <th>HSN Number</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td></td>
-                    <td>Excl</td>
-                    <td>Incl</td>
-                    <td>Excl</td>
-                    <td>Stainless Steel Wire Cloth 7314<br />PB Wire Cloth 7419</td>
-                  </tr>
-                </tbody>
-              </table>
-              <div style={{ marginBottom: '4px', fontWeight: 'bold' }}>Notes</div>
-              <div style={{ border: '1px solid #000', minHeight: '60px', padding: '8px', whiteSpace: 'pre-wrap' }}>
-                {data.remarks || ''}
-              </div>
-            </td>
-            <td style={{ width: '45%', verticalAlign: 'top', border: '1px solid #000', padding: '12px' }}>
-              <table style={{ width: '100%', border: 'none' }}>
-                <tbody>
-                  <tr><td style={{ border: 'none', padding: '4px 0' }}>Freight Charge</td><td style={{ border: 'none', padding: '4px 0', textAlign: 'right' }}>0.00</td></tr>
-                  <tr><td style={{ border: 'none', padding: '4px 0' }}>Packing Charges</td><td style={{ border: 'none', padding: '4px 0', textAlign: 'right' }}>0.00</td></tr>
-                  <tr><td style={{ border: 'none', padding: '4px 0' }}>Seam Charges</td><td style={{ border: 'none', padding: '4px 0', textAlign: 'right' }}>0.00</td></tr>
-                  <tr><td style={{ border: 'none', padding: '4px 0', fontWeight: 'bold' }}>Total Amount Before Tax</td><td style={{ border: 'none', padding: '4px 0', textAlign: 'right', fontWeight: 'bold' }}>{formatCurrency(data.totalAmount)}</td></tr>
-                  <tr><td style={{ border: 'none', padding: '4px 0' }}>Add CGST @ {cgstRate > 0 ? `${cgstRate}%` : '0.00'}</td><td style={{ border: 'none', padding: '4px 0', textAlign: 'right' }}>{formatCurrency(cgstAmount)}</td></tr>
-                  <tr><td style={{ border: 'none', padding: '4px 0' }}>Add SGST @ {sgstRate > 0 ? `${sgstRate}%` : '0.00'}</td><td style={{ border: 'none', padding: '4px 0', textAlign: 'right' }}>{formatCurrency(sgstAmount)}</td></tr>
-                  <tr><td style={{ border: 'none', padding: '4px 0' }}>Add IGST @ {igstRate > 0 ? `${igstRate}%` : '0.00'}</td><td style={{ border: 'none', padding: '4px 0', textAlign: 'right' }}>{formatCurrency(igstAmount)}</td></tr>
-                  <tr><td style={{ border: 'none', padding: '4px 0' }}>Tax Amount GST</td><td style={{ border: 'none', padding: '4px 0', textAlign: 'right' }}>{formatCurrency(taxAmount)}</td></tr>
-                  <tr><td style={{ border: 'none', padding: '4px 0', fontWeight: 'bold' }}>Total Amount After GST</td><td style={{ border: 'none', padding: '4px 0', textAlign: 'right', fontWeight: 'bold' }}>{formatCurrency(totalAfterTax)}</td></tr>
-                </tbody>
-              </table>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-      <div className="amount-in-words">
-        <strong>Amount Chargeable (in words):-</strong> {data.currency} {formatCurrency(totalAfterTax)} Only
-      </div>
-
-      {/* Remarks and Authorization */}
-      <table style={{ marginTop: '12px' }}>
-        <tbody>
-          <tr>
-            <td style={{ width: '60%', verticalAlign: 'top', border: '1px solid #000', padding: '12px' }}>
-              <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>Remarks:-</div>
-              <ol style={{ marginLeft: '20px', lineHeight: 1.6 }}>
-                <li>We hope you will find the offer as per your needs. We request you to release your valued PO at the earliest.</li>
-                <li>Please mention this quotation number on your PO and all communications.</li>
-                <li>This quotation is valid only for the products & quantity mentioned.</li>
-                <li>Mentioned delivery date is from date of confirmed PO other terms if any.</li>
-                <li>Subjects to terms and conditions closed.</li>
-              </ol>
-            </td>
-            <td style={{ width: '40%', verticalAlign: 'top', border: '1px solid #000', padding: '12px', textAlign: 'right' }}>
-              <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>For WMW Metal Fabrics Ltd.</div>
-              <div>Computer Generated Document</div>
-              <div>No Signature Needed</div>
-              <div style={{ marginTop: '8px' }}>Dated: {data.date}</div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-      <div style={{ textAlign: 'right', marginTop: '12px', fontSize: '10px' }}>DOC NO. WMW/MKT/F.1 (Rev.00)</div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+                <div className="quotation-master-footer print-footer">
+                  <QuotationInvoiceFooter quotationDate={data.date} />
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        </div>
       </div>
 
       <div className="no-print" style={{ marginTop: '24px', textAlign: 'center' }}>

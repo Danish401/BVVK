@@ -1,8 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import { QuotationData } from '@/lib/types'
+import type { QuotationData } from '@/lib/types'
+import GoodsDescriptionPaginatedBlock from './GoodsDescriptionPaginatedBlock'
 import { formatCurrency } from '@/lib/quotation-utils'
+import QuotationAddressPair from './QuotationAddressPair'
 
 interface PerformaInvoiceContentProps {
   data: QuotationData
@@ -12,7 +14,7 @@ interface PerformaInvoiceContentProps {
 }
 
 const headerSupplierCell = (
-  <td style={{ width: '55%', verticalAlign: 'top', border: '1px solid #000', padding: '12px' }}>
+  <td style={{ width: '55%', verticalAlign: 'top', border: '1px solid #000', padding: '8px 10px' }}>
     <div style={{ marginBottom: '8px', fontWeight: 'bold' }}>Supplier</div>
     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
       <div style={{ width: '48px', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -52,7 +54,7 @@ export default function PerformaInvoiceContent({ data, shippingData, billingData
   const totalAfterTax = parseFloat(rawQuotationData?.Total_After_Tax || rawQuotationData?.Total_Amount_After_GST || '0') || data.totalAmount
 
   const headerInvoiceCell = (
-    <td style={{ width: '45%', verticalAlign: 'top', border: '1px solid #000', padding: '12px' }}>
+    <td style={{ width: '45%', verticalAlign: 'top', border: '1px solid #000', padding: '8px 10px' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000' }}>
         <tbody>
           <tr>
@@ -86,17 +88,20 @@ export default function PerformaInvoiceContent({ data, shippingData, billingData
 
   const totalAmount = formatCurrency(data.totalAmount)
 
+  const lineItems = data.lineItems ?? []
+
   return (
     <>
       {/* Performa Invoice Content Div */}
-      <div className="performa-invoice-content-section" style={{ border: '1px solid #000', padding: '16px', marginBottom: '24px' }}>
+      <div className="performa-invoice-content-section performa-invoice-content-section--seamless" style={{ border: '1px solid #000', marginBottom: '24px' }}>
         {/* Title - Performa Invoice */}
-        <p className="performa-invoice-title" style={{ textAlign: 'center', fontSize: '22px', fontWeight: 'bold', marginBottom: '16px', textTransform: 'uppercase', marginTop: 0 }}>
+        <p className="performa-invoice-title performa-invoice-title--compact" style={{ textAlign: 'center', fontSize: '20px', fontWeight: 'bold', textTransform: 'uppercase', margin: 0, padding: '6px 8px 4px' }}>
           Performa Invoice
         </p>
-        
+
+        <div className="quotation-seamless-stack">
         {/* Header table - shown on screen, repeated in print */}
-        <table className="repeating-header" style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000', marginBottom: '12px' }}>
+        <table className="repeating-header quotation-stack-table" style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000' }}>
           <tbody>
             <tr>
               {headerSupplierCell}
@@ -104,152 +109,16 @@ export default function PerformaInvoiceContent({ data, shippingData, billingData
             </tr>
           </tbody>
         </table>
-        
-        <div>
-        {/* Consignee and Recipient */}
-        <table style={{ marginTop: '12px', width: '100%', borderCollapse: 'collapse' }}>
-          <tbody>
-            <tr>
-              <td style={{ width: '50%', border: '1px solid #000', padding: '12px', verticalAlign: 'top' }}>
-                <div className="section-title" style={{ fontWeight: 'bold', marginBottom: '8px' }}>Detail Of Consignee/Shipped To</div>
-                {shippingData ? (
-                  <>
-                    {shippingData.Shipping_Address_Name && (
-                      <div style={{ fontWeight: 'bold', marginTop: '6px' }}>{shippingData.Shipping_Address_Name}</div>
-                    )}
-                    {shippingData.Parent_Account && (
-                      <div style={{ fontWeight: 'bold', marginTop: '4px' }}>{shippingData.Parent_Account}</div>
-                    )}
-                    {shippingData.Shipping_Street && (
-                      <div>{shippingData.Shipping_Street}</div>
-                    )}
-                    {shippingData.Shipping_City && (
-                      <div>
-                        {shippingData.Shipping_City}
-                        {shippingData.Shipping_State && `, ${shippingData.Shipping_State}`}
-                        {shippingData.Shipping_Postal_Code && ` ${shippingData.Shipping_Postal_Code}`}
-                      </div>
-                    )}
-                    {shippingData.Shipping_Country && (
-                      <div>{shippingData.Shipping_Country}</div>
-                    )}
-                    <table style={{ marginTop: '8px', width: '100%', borderCollapse: 'collapse', border: '1px solid #000' }}>
-                      <tbody>
-                        <tr>
-                          <td style={{ border: '1px solid #000', padding: '4px' }}>State Code</td>
-                          <td style={{ border: '1px solid #000', padding: '4px' }}>{shippingData.Shipping_State_Code || ''}</td>
-                        </tr>
-                        {shippingData.Shipping_GST_No && (
-                          <tr>
-                            <td style={{ border: '1px solid #000', padding: '4px' }}>GST Number</td>
-                            <td style={{ border: '1px solid #000', padding: '4px' }}>{shippingData.Shipping_GST_No}</td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </>
-                ) : (
-                  <div style={{ marginTop: '6px', fontStyle: 'italic', color: '#666' }}>No shipping data available</div>
-                )}
-              </td>
-              <td style={{ width: '50%', border: '1px solid #000', padding: '12px', verticalAlign: 'top' }}>
-                <div className="section-title" style={{ fontWeight: 'bold', marginBottom: '8px' }}>Detail Of Recipient/Billed To</div>
-                {billingData ? (
-                  <>
-                    {billingData.Billing_Address_Name && (
-                      <div style={{ fontWeight: 'bold', marginTop: '6px' }}>{billingData.Billing_Address_Name}</div>
-                    )}
-                    {billingData.Parent_Account && (
-                      <div style={{ fontWeight: 'bold', marginTop: '4px' }}>{billingData.Parent_Account}</div>
-                    )}
-                    {billingData.Billing_Street && (
-                      <div>{billingData.Billing_Street}</div>
-                    )}
-                    {billingData.Billing_City && (
-                      <div>
-                        {billingData.Billing_City}
-                        {billingData.Billing_State && `, ${billingData.Billing_State}`}
-                        {billingData.Billing_Postal_Code && ` ${billingData.Billing_Postal_Code}`}
-                      </div>
-                    )}
-                    {billingData.Billing_Country && (
-                      <div>{billingData.Billing_Country}</div>
-                    )}
-                    <table style={{ marginTop: '8px', width: '100%', borderCollapse: 'collapse', border: '1px solid #000' }}>
-                      <tbody>
-                        <tr>
-                          <td style={{ border: '1px solid #000', padding: '4px' }}>State Code</td>
-                          <td style={{ border: '1px solid #000', padding: '4px' }}>{billingData.Billing_State_Code || ''}</td>
-                        </tr>
-                        {billingData.Billing_GST_No && (
-                          <tr>
-                            <td style={{ border: '1px solid #000', padding: '4px' }}>GST Number</td>
-                            <td style={{ border: '1px solid #000', padding: '4px' }}>{billingData.Billing_GST_No}</td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </>
-                ) : (
-                  <div style={{ marginTop: '6px', fontStyle: 'italic', color: '#666' }}>No billing data available</div>
-                )}
-              </td>
-            </tr>
-          </tbody>
-        </table>
 
-        {/* Description Of Goods */}
-        <div className="section-title" style={{ marginTop: '12px', fontWeight: 'bold', marginBottom: '8px' }}>Description Of Goods</div>
-        <table className="goods-description-table" style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000' }}>
-          <thead style={{ display: 'table-header-group' }}>
-            <tr>
-              <th style={{ width: '40%', textAlign: 'left', border: '1px solid #000', padding: '8px', backgroundColor: '#f5f5f5', fontWeight: 'bold', display: 'table-cell' }}>Product / Quality / Form / Size / Type</th>
-              <th style={{ width: '12%', border: '1px solid #000', padding: '8px', backgroundColor: '#f5f5f5', fontWeight: 'bold', display: 'table-cell' }}>Delivery</th>
-              <th style={{ width: '8%', border: '1px solid #000', padding: '8px', backgroundColor: '#f5f5f5', fontWeight: 'bold', display: 'table-cell' }}>UOM</th>
-              <th style={{ width: '15%', border: '1px solid #000', padding: '8px', backgroundColor: '#f5f5f5', fontWeight: 'bold', display: 'table-cell' }}>Quantity</th>
-              <th style={{ width: '12%', textAlign: 'right', border: '1px solid #000', padding: '8px', backgroundColor: '#f5f5f5', fontWeight: 'bold', display: 'table-cell' }}>Rate/SQM</th>
-              <th style={{ width: '13%', textAlign: 'right', border: '1px solid #000', padding: '8px', backgroundColor: '#f5f5f5', fontWeight: 'bold', display: 'table-cell' }}>Amount INR</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.lineItems.length > 0 ? (
-              data.lineItems.map((row, i) => (
-                <tr key={i}>
-                  <td style={{ verticalAlign: 'top', border: '1px solid #000', padding: '8px' }}>
-                    <div><strong>Product</strong>: {row.product}</div>
-                    {row.quality && <div><strong>Quality</strong>: {row.quality}</div>}
-                    {row.form && <div><strong>Form</strong>: {row.form}</div>}
-                    {row.size && <div><strong>Size</strong>: {row.size}</div>}
-                    {row.type && <div><strong>Type</strong>: {row.type}</div>}
-                  </td>
-                  <td style={{ border: '1px solid #000', padding: '8px' }}>{row.delivery}</td>
-                  <td style={{ border: '1px solid #000', padding: '8px' }}>{row.uom}</td>
-                  <td style={{ border: '1px solid #000', padding: '8px' }}>
-                    {row.qty}
-                    {row.pieces && <><br />{row.pieces}</>}
-                  </td>
-                  <td className="text-right" style={{ border: '1px solid #000', padding: '8px' }}>{row.rate}</td>
-                  <td className="text-right" style={{ border: '1px solid #000', padding: '8px' }}>{row.amount}</td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={6} style={{ textAlign: 'center', padding: '20px', color: '#666', border: '1px solid #000' }}>
-                  No line items found
-                </td>
-              </tr>
-            )}
-          </tbody>
-          <tfoot>
-            <tr>
-              <td colSpan={5} className="text-right font-bold" style={{ border: '1px solid #000', padding: '8px', textAlign: 'right', fontWeight: 'bold' }}>Total {data.currency}</td>
-              <td className="text-right font-bold" style={{ border: '1px solid #000', padding: '8px', textAlign: 'right', fontWeight: 'bold' }}>{totalAmount}</td>
-            </tr>
-          </tfoot>
-        </table>
+        <QuotationAddressPair shippingData={shippingData} billingData={billingData} />
+
+        <GoodsDescriptionPaginatedBlock
+          lineItems={lineItems}
+          totalFoot={{ currency: data.currency, amountFormatted: totalAmount }}
+        />
 
         {/* Bottom section: Validity, Charges, Notes (left) | Calculation (right) */}
-        <table style={{ marginTop: '12px', width: '100%', borderCollapse: 'collapse' }}>
+        <table className="quotation-stack-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
           <tbody>
             <tr>
               <td style={{ width: '55%', verticalAlign: 'top', border: '1px solid #000', padding: '12px' }}>
@@ -309,7 +178,7 @@ export default function PerformaInvoiceContent({ data, shippingData, billingData
         </table>
 
         {/* Remarks */}
-        <table style={{ marginTop: '12px', width: '100%', borderCollapse: 'collapse', border: '1px solid #000' }}>
+        <table className="quotation-stack-table" style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000' }}>
           <tbody>
             <tr>
               <td style={{ width: '60%', verticalAlign: 'top', border: '1px solid #000', padding: '12px' }}>
@@ -330,12 +199,12 @@ export default function PerformaInvoiceContent({ data, shippingData, billingData
         </table>
 
         {/* Amount in Words */}
-        <div className="amount-in-words" style={{ marginTop: '12px', padding: '8px 0' }}>
+        <div className="amount-in-words quotation-stack-amount-row">
           <strong>Amount Chargeable (In words):-</strong> {data.currency} {formatCurrency(totalAfterTax)} Only
         </div>
 
         {/* Bank Details with Blue Header Bar */}
-        <table style={{ marginTop: '12px', width: '100%', borderCollapse: 'collapse', border: '1px solid #000' }}>
+        <table className="quotation-stack-table" style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000' }}>
           <tbody>
             <tr>
               <td style={{ border: '1px solid #000', padding: '10px', backgroundColor: '#1e40af', color: '#fff', fontWeight: 'bold' }} colSpan={2}>
@@ -366,7 +235,7 @@ export default function PerformaInvoiceContent({ data, shippingData, billingData
           </tbody>
         </table>
 
-        <div style={{ textAlign: 'right', marginTop: '12px', fontSize: '10px' }}>DOC NO. WMW/MKT/F.1 (Rev.00)</div>
+        <div className="quotation-doc-footer-meta" style={{ textAlign: 'right', marginTop: '6px', padding: '0 4px 4px', fontSize: '10px' }}>DOC NO. WMW/MKT/F.1 (Rev.00)</div>
         </div>
       </div>
 

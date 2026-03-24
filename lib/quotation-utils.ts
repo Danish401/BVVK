@@ -103,6 +103,78 @@ export function numberToWords(num: number): string {
   return words.trim()
 }
 
+/** Stable key for merging WI_2_0 / WI_3_0 rows (same Line_Item_ref → one logical line) */
+function category1WiLineMergeKey(row: any, seq: number): string {
+  const r =
+    row?.Line_Item_ref?.trim() ||
+    row?.Last_item_ref?.trim() ||
+    row?.last_item_ref?.trim()
+  if (r) return r
+  return `__noref_${row?.ID ?? 'x'}_${seq}`
+}
+
+/**
+ * Merge Category_1_MM_Database_WI_2_0 and Category_1_MM_Database_WI_3_0 by ref.
+ * Rows with the same Line_Item_ref become one object (WI_3_0 fields overlay WI_2_0).
+ */
+function mergeCategory1WiLineSubformsByRef(wi20: any[], wi30: any[]): Map<string, any> {
+  const map = new Map<string, any>()
+  const ingest = (row: any, seq: number) => {
+    const key = category1WiLineMergeKey(row, seq)
+    const prev = map.get(key)
+    map.set(key, prev ? { ...prev, ...row } : { ...row })
+  }
+  ;(wi20 || []).forEach((row, i) => ingest(row, i))
+  ;(wi30 || []).forEach((row, i) => ingest(row, i + 10000))
+  return map
+}
+
+function category1WiProductRef(pd: any): string | null {
+  const r =
+    pd?.Line_Item_ref?.trim() ||
+    pd?.Last_item_ref?.trim() ||
+    pd?.last_item_ref?.trim()
+  return r || null
+}
+
+/**
+ * Pick merged line row for a product subform row without double-using the same billing line.
+ */
+function pickMergedLineForCategory1WiProduct(
+  pd: any,
+  index: number,
+  mergedByRef: Map<string, any>,
+  wi20: any[],
+  usedLineKeys: Set<string>
+): any {
+  const pdR = category1WiProductRef(pd)
+  if (pdR && mergedByRef.has(pdR) && !usedLineKeys.has(pdR)) {
+    usedLineKeys.add(pdR)
+    return mergedByRef.get(pdR)!
+  }
+  const ordinal = String(index + 1)
+  if (mergedByRef.has(ordinal) && !usedLineKeys.has(ordinal)) {
+    usedLineKeys.add(ordinal)
+    return mergedByRef.get(ordinal)!
+  }
+  const row20 = wi20[index]
+  if (row20) {
+    const k = category1WiLineMergeKey(row20, index)
+    if (mergedByRef.has(k) && !usedLineKeys.has(k)) {
+      usedLineKeys.add(k)
+      return mergedByRef.get(k)!
+    }
+  }
+  if (index === 0 && mergedByRef.size === 1) {
+    const onlyKey = [...mergedByRef.keys()][0]
+    if (!usedLineKeys.has(onlyKey)) {
+      usedLineKeys.add(onlyKey)
+      return mergedByRef.get(onlyKey)!
+    }
+  }
+  return {}
+}
+
 /**
  * Maps Template field value to Category data field names
  * Returns object with lineItemsField and productDetailsField
@@ -287,6 +359,25 @@ export function transformQuotationData(
       : (zohoData.Category_1_MM_Database_WMW || [])
   }
 
+  // Category 1 WI: merge both line-item subforms (WI_2_0 + WI_3_0) against product subform Category_1_MM_Database_WI
+  const usesCategory1WiLineAndProduct =
+    categoryFields?.lineItemsField === 'Category_1_MM_Database_WI_2_0' &&
+    categoryFields?.productDetailsField === 'Category_1_MM_Database_WI'
+  const fallbackUsesCategory1WiLines =
+    !categoryFields &&
+    (templateType === 'WI' ||
+      templateType === 'EXPORT' ||
+      templateType === 'SLS' ||
+      templateType === 'GKD' ||
+      templateType === 'BVK')
+
+  const wi20Category1 = (zohoData.Category_1_MM_Database_WI_2_0 as any[]) || []
+  const wi30Category1 = (zohoData.Category_1_MM_Database_WI_3_0 as any[]) || []
+  const isCategory1WiBundle = usesCategory1WiLineAndProduct || fallbackUsesCategory1WiLines
+  const mergedCategory1WiLines = isCategory1WiBundle
+    ? mergeCategory1WiLineSubformsByRef(wi20Category1, wi30Category1)
+    : null
+
   /**
    * Extracts Quality from Product_Code by splitting on '.' and getting second-to-last segment
    * Example: FG.PM.OER.PDW.30x150.SSxSS.316L.V01 -> 316L
@@ -384,71 +475,201 @@ export function transformQuotationData(
       const amountNum = parseFloat(amount.toString().replace(/,/g, '')) || 0
       totalAmount += amountNum
     })
-  } else {
-    // WI template (existing logic)
-  zohoLineItems.forEach((item, index) => {
-    // Try to find matching product detail by Line_Item_ref or by index
-    const lineItemRef = item.Line_Item_ref?.trim()
-    const productDetail = lineItemRef
-      ? productDetails.find((pd: any) => pd.Line_Item_ref?.trim() === lineItemRef) || productDetails[index] || {}
-      : productDetails[index] || {}
-    
-    // Map product information - prioritize product detail fields
-    const product = productDetail.Product_Name || productDetail.Product_Group || 'N/A'
-    
-    // Type: Use Brand_Category
-    const type = productDetail.Brand_Category || item.Line_Item_ref || ''
-    
-    // Quality: Extract from Product_Code (second-to-last segment when split by '.')
-    const quality = extractQualityFromProductCode(productDetail.Product_Code) || ''
-    
-    // Form: Use Invoice_Dimension_Type from line item, fallback to product detail
-    const form = item.Invoice_Dimension_Type || productDetail.Invoice_Form || productDetail.Supply_Form || ''
-    
-    // Size: Use Invoice dimensions from line item, fallback to Supply dimensions from product detail
-    const size = item.Invoice_Dimension_1 && item.Invoice_Dimension_2 
-      ? `${item.Invoice_Dimension_1}x${item.Invoice_Dimension_2}`
-      : productDetail.Supply_Dimension_1 && productDetail.Supply_Dimension_2
-      ? `${productDetail.Supply_Dimension_1}x${productDetail.Supply_Dimension_2}`
-      : item.Invoice_Dimension_1 || productDetail.Supply_Dimension_1 || ''
+  } else if (mergedCategory1WiLines && productDetails.length > 0) {
+    // One table row per Category_1_MM_Database_WI product; merge WI_2_0 + WI_3_0 by Line_Item_ref (no duplicate rows)
+    const usedLineKeys = new Set<string>()
+    productDetails.forEach((productDetail, index) => {
+      const item = pickMergedLineForCategory1WiProduct(
+        productDetail,
+        index,
+        mergedCategory1WiLines,
+        wi20Category1,
+        usedLineKeys
+      )
 
-    // Map quantities and pricing
-    const qty = item.Qty?.trim() || '0'
-    const subQty = item.SQM?.trim() || '0'
-    const rate = item.Selling_Price?.trim() || '0'
-    const amount = item.Total_Sale_Value?.trim() || '0'
-    
-    // Calculate unit description
-    const qtyNum = parseFloat(qty.replace(/,/g, '')) || 0
-    const unit = qtyNum === 1 ? 'One Pc' : 
-                 qtyNum === 2 ? 'Two Pc' : 
-                 qtyNum === 3 ? 'Three Pc' : 
-                 qtyNum === 4 ? 'Four Pc' : 
-                 qtyNum > 0 ? `${qtyNum} Pc` : ''
+      const product = productDetail.Product_Name || productDetail.Product_Group || 'N/A'
+      const type = productDetail.Brand_Category || item.Line_Item_ref || ''
+      const quality = extractQualityFromProductCode(productDetail.Product_Code) || ''
+      const form =
+        item.Invoice_Dimension_Type ||
+        productDetail.Invoice_Form ||
+        productDetail.Supply_Form ||
+        ''
+      const size =
+        item.Invoice_Dimension_1 && item.Invoice_Dimension_2
+          ? `${item.Invoice_Dimension_1}x${item.Invoice_Dimension_2}`
+          : productDetail.Supply_Dimension_1 && productDetail.Supply_Dimension_2
+            ? `${productDetail.Supply_Dimension_1}x${productDetail.Supply_Dimension_2}`
+            : item.Invoice_Dimension_1 || productDetail.Supply_Dimension_1 || ''
 
-    // Check if Pieces field exists in the line item
-    const pieces = item.Pieces?.trim() || ''
+      const qty = item.Qty?.trim() || '0'
+      const subQty = item.SQM?.trim() || '0'
+      const rate = item.Selling_Price?.trim() || '0'
+      const amount = item.Total_Sale_Value?.trim() || '0'
 
-    lineItems.push({
-      product,
-      quality,
-      form,
-      size,
-      type,
-      delivery: formatDate(zohoData.Delivery_Date_Control),
-      uom: item.UOM_Billing?.trim() || 'SQMT',
-      qty,
-      subQty,
-      unit,
-      pieces,
-      rate: formatCurrency(rate),
-      amount: formatCurrency(amount),
+      const qtyNum = parseFloat(qty.replace(/,/g, '')) || 0
+      const unit =
+        qtyNum === 1
+          ? 'One Pc'
+          : qtyNum === 2
+            ? 'Two Pc'
+            : qtyNum === 3
+              ? 'Three Pc'
+              : qtyNum === 4
+                ? 'Four Pc'
+                : qtyNum > 0
+                  ? `${qtyNum} Pc`
+                  : ''
+
+      const pieces = item.Pieces?.trim() || ''
+
+      lineItems.push({
+        product,
+        quality,
+        form,
+        size,
+        type,
+        delivery: formatDate(zohoData.Delivery_Date_Control),
+        uom: item.UOM_Billing?.trim() || 'SQMT',
+        qty,
+        subQty,
+        unit,
+        pieces,
+        rate: formatCurrency(rate),
+        amount: formatCurrency(amount),
+      })
+
+      const amountNum = parseFloat(amount.toString().replace(/,/g, '')) || 0
+      totalAmount += amountNum
     })
+  } else if (mergedCategory1WiLines && mergedCategory1WiLines.size > 0) {
+    // Product subform empty but merged WI_2_0 + WI_3_0 rows exist — show one row per merged line
+    mergedCategory1WiLines.forEach((item) => {
+      const productDetail: any = {}
+      const product = productDetail.Product_Name || productDetail.Product_Group || 'N/A'
+      const type = productDetail.Brand_Category || item.Line_Item_ref || ''
+      const quality = extractQualityFromProductCode(productDetail.Product_Code) || ''
+      const form =
+        item.Invoice_Dimension_Type ||
+        productDetail.Invoice_Form ||
+        productDetail.Supply_Form ||
+        ''
+      const size =
+        item.Invoice_Dimension_1 && item.Invoice_Dimension_2
+          ? `${item.Invoice_Dimension_1}x${item.Invoice_Dimension_2}`
+          : item.Invoice_Dimension_1 || productDetail.Supply_Dimension_1 || ''
 
-    // Add to total
-    const amountNum = parseFloat(amount.toString().replace(/,/g, '')) || 0
-    totalAmount += amountNum
-  })
+      const qty = item.Qty?.trim() || '0'
+      const subQty = item.SQM?.trim() || '0'
+      const rate = item.Selling_Price?.trim() || '0'
+      const amount = item.Total_Sale_Value?.trim() || '0'
+
+      const qtyNum = parseFloat(qty.replace(/,/g, '')) || 0
+      const unit =
+        qtyNum === 1
+          ? 'One Pc'
+          : qtyNum === 2
+            ? 'Two Pc'
+            : qtyNum === 3
+              ? 'Three Pc'
+              : qtyNum === 4
+                ? 'Four Pc'
+                : qtyNum > 0
+                  ? `${qtyNum} Pc`
+                  : ''
+
+      const pieces = item.Pieces?.trim() || ''
+
+      lineItems.push({
+        product,
+        quality,
+        form,
+        size,
+        type,
+        delivery: formatDate(zohoData.Delivery_Date_Control),
+        uom: item.UOM_Billing?.trim() || 'SQMT',
+        qty,
+        subQty,
+        unit,
+        pieces,
+        rate: formatCurrency(rate),
+        amount: formatCurrency(amount),
+      })
+
+      const amountNum = parseFloat(amount.toString().replace(/,/g, '')) || 0
+      totalAmount += amountNum
+    })
+  } else {
+    // WI (and similar): line-item–only when no product subform rows, or non–Category-1-WI
+    zohoLineItems.forEach((item, index) => {
+      const ref =
+        item.Line_Item_ref?.trim() ||
+        (item as any).Last_item_ref?.trim() ||
+        (item as any).last_item_ref?.trim()
+      const productDetail = ref
+        ? productDetails.find(
+            (pd: any) =>
+              pd.Line_Item_ref?.trim() === ref ||
+              pd.Last_item_ref?.trim() === ref ||
+              pd.last_item_ref?.trim() === ref
+          ) || productDetails[index] || {}
+        : productDetails[index] || {}
+
+      const product = productDetail.Product_Name || productDetail.Product_Group || 'N/A'
+      const type = productDetail.Brand_Category || item.Line_Item_ref || ''
+      const quality = extractQualityFromProductCode(productDetail.Product_Code) || ''
+      const form =
+        item.Invoice_Dimension_Type ||
+        productDetail.Invoice_Form ||
+        productDetail.Supply_Form ||
+        ''
+      const size =
+        item.Invoice_Dimension_1 && item.Invoice_Dimension_2
+          ? `${item.Invoice_Dimension_1}x${item.Invoice_Dimension_2}`
+          : productDetail.Supply_Dimension_1 && productDetail.Supply_Dimension_2
+            ? `${productDetail.Supply_Dimension_1}x${productDetail.Supply_Dimension_2}`
+            : item.Invoice_Dimension_1 || productDetail.Supply_Dimension_1 || ''
+
+      const qty = item.Qty?.trim() || '0'
+      const subQty = item.SQM?.trim() || '0'
+      const rate = item.Selling_Price?.trim() || '0'
+      const amount = item.Total_Sale_Value?.trim() || '0'
+
+      const qtyNum = parseFloat(qty.replace(/,/g, '')) || 0
+      const unit =
+        qtyNum === 1
+          ? 'One Pc'
+          : qtyNum === 2
+            ? 'Two Pc'
+            : qtyNum === 3
+              ? 'Three Pc'
+              : qtyNum === 4
+                ? 'Four Pc'
+                : qtyNum > 0
+                  ? `${qtyNum} Pc`
+                  : ''
+
+      const pieces = item.Pieces?.trim() || ''
+
+      lineItems.push({
+        product,
+        quality,
+        form,
+        size,
+        type,
+        delivery: formatDate(zohoData.Delivery_Date_Control),
+        uom: item.UOM_Billing?.trim() || 'SQMT',
+        qty,
+        subQty,
+        unit,
+        pieces,
+        rate: formatCurrency(rate),
+        amount: formatCurrency(amount),
+      })
+
+      const amountNum = parseFloat(amount.toString().replace(/,/g, '')) || 0
+      totalAmount += amountNum
+    })
   }
 
   return {

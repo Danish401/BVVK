@@ -61,6 +61,8 @@ export interface ZohoQuotation {
   Template?: string
   Account_Module?: AccountModule
   Category_1_MM_Database_WI_2_0?: ZohoLineItem[]
+  /** Second line-items subform for Category 1 WI (merged with WI_2_0 for display) */
+  Category_1_MM_Database_WI_3_0?: ZohoLineItem[]
   Category_1_MM_Database_WI?: Array<{
     ID: string
     Product_Group?: string

@@ -126,8 +126,8 @@ function QuotationPageContent() {
 
         // Get id from URL params
         const id = searchParams.get('id') || searchParams.get('perm') || ''
-        const url = id 
-          ? `/api/zoho-quotations?id=${encodeURIComponent(id)}` 
+        const url = id
+          ? `/api/zoho-quotations?id=${encodeURIComponent(id)}`
           : '/api/zoho-quotations'
 
         const response = await fetch(url)
@@ -139,15 +139,15 @@ function QuotationPageContent() {
 
         const quotation = data.data[0]
         setRawQuotationData(quotation)
-        
+
         // Determine template type from API response
         const typeOfQuotation = quotation.Type_Of_Quotation
         const templateField = quotation.Template
-        
+
         // Auto-set template type based on Type_Of_Quotation and Template fields
         const autoTemplateType = determineTemplateType(typeOfQuotation, templateField)
         setTemplateType(autoTemplateType)
-        
+
         // Transform the first quotation with determined template type and template field
         const transformed = transformQuotationData(quotation, autoTemplateType, templateField)
         setQuotationData(transformed)
@@ -270,31 +270,31 @@ function QuotationPageContent() {
     )
   ) : (
     quotationData ? (
-    <td style={{ width: '45%', verticalAlign: 'top', border: '1px solid #000', padding: '12px' }}>
-      <table style={{ width: '100%', border: 'none' }}>
-        <tbody>
-          <tr><td style={{ border: 'none', padding: '4px 0' }}><strong>Quotation No</strong></td><td style={{ border: 'none', padding: '4px 0' }}>{quotationData.quotationNumber}</td></tr>
-          <tr><td style={{ border: 'none', padding: '4px 0' }}><strong>Date</strong></td><td style={{ border: 'none', padding: '4px 0' }}>{quotationData.date}</td></tr>
-          <tr><td style={{ border: 'none', padding: '4px 0' }}><strong>Buyer&apos;s Enquiry No</strong></td><td style={{ border: 'none', padding: '4px 0' }}>{quotationData.buyerEnquiryNo || ''}</td></tr>
-          <tr><td style={{ border: 'none', padding: '4px 0' }}><strong>Terms Of Payment</strong></td><td style={{ border: 'none', padding: '4px 0' }}>{quotationData.termsOfPayment || ''}</td></tr>
-          <tr><td style={{ border: 'none', padding: '4px 0' }}><strong>Inco Terms</strong></td><td style={{ border: 'none', padding: '4px 0' }}>{quotationData.incoTerms || ''}</td></tr>
-          <tr><td style={{ border: 'none', padding: '4px 0' }}><strong>Terms Of Delivery</strong></td><td style={{ border: 'none', padding: '4px 0' }}>{quotationData.termsOfDelivery || ''}</td></tr>
-        </tbody>
-      </table>
-    </td>
-  ) : (
-    <td style={{ width: '45%', verticalAlign: 'top', border: '1px solid #000', padding: '12px' }}>
-      <table style={{ width: '100%', border: 'none' }}>
-        <tbody>
-          <tr><td style={{ border: 'none', padding: '4px 0' }}><strong>Quotation No</strong></td><td style={{ border: 'none', padding: '4px 0' }}>Loading...</td></tr>
-          <tr><td style={{ border: 'none', padding: '4px 0' }}><strong>Date</strong></td><td style={{ border: 'none', padding: '4px 0' }}>Loading...</td></tr>
-          <tr><td style={{ border: 'none', padding: '4px 0' }}><strong>Buyer&apos;s Enquiry No</strong></td><td style={{ border: 'none', padding: '4px 0' }}></td></tr>
-          <tr><td style={{ border: 'none', padding: '4px 0' }}><strong>Terms Of Payment</strong></td><td style={{ border: 'none', padding: '4px 0' }}></td></tr>
-          <tr><td style={{ border: 'none', padding: '4px 0' }}><strong>Inco Terms</strong></td><td style={{ border: 'none', padding: '4px 0' }}></td></tr>
-          <tr><td style={{ border: 'none', padding: '4px 0' }}><strong>Terms Of Delivery</strong></td><td style={{ border: 'none', padding: '4px 0' }}></td></tr>
-        </tbody>
-      </table>
-    </td>
+      <td style={{ width: '45%', verticalAlign: 'top', border: '1px solid #000', padding: '12px' }}>
+        <table style={{ width: '100%', border: 'none' }}>
+          <tbody>
+            <tr><td style={{ border: 'none', padding: '4px 0' }}><strong>Quotation No</strong></td><td style={{ border: 'none', padding: '4px 0' }}>{quotationData.quotationNumber}</td></tr>
+            <tr><td style={{ border: 'none', padding: '4px 0' }}><strong>Date</strong></td><td style={{ border: 'none', padding: '4px 0' }}>{quotationData.date}</td></tr>
+            <tr><td style={{ border: 'none', padding: '4px 0' }}><strong>Buyer&apos;s Enquiry No</strong></td><td style={{ border: 'none', padding: '4px 0' }}>{quotationData.buyerEnquiryNo || ''}</td></tr>
+            <tr><td style={{ border: 'none', padding: '4px 0' }}><strong>Terms Of Payment</strong></td><td style={{ border: 'none', padding: '4px 0' }}>{quotationData.termsOfPayment || ''}</td></tr>
+            <tr><td style={{ border: 'none', padding: '4px 0' }}><strong>Inco Terms</strong></td><td style={{ border: 'none', padding: '4px 0' }}>{quotationData.incoTerms || ''}</td></tr>
+            <tr><td style={{ border: 'none', padding: '4px 0' }}><strong>Terms Of Delivery</strong></td><td style={{ border: 'none', padding: '4px 0' }}>{quotationData.termsOfDelivery || ''}</td></tr>
+          </tbody>
+        </table>
+      </td>
+    ) : (
+      <td style={{ width: '45%', verticalAlign: 'top', border: '1px solid #000', padding: '12px' }}>
+        <table style={{ width: '100%', border: 'none' }}>
+          <tbody>
+            <tr><td style={{ border: 'none', padding: '4px 0' }}><strong>Quotation No</strong></td><td style={{ border: 'none', padding: '4px 0' }}>Loading...</td></tr>
+            <tr><td style={{ border: 'none', padding: '4px 0' }}><strong>Date</strong></td><td style={{ border: 'none', padding: '4px 0' }}>Loading...</td></tr>
+            <tr><td style={{ border: 'none', padding: '4px 0' }}><strong>Buyer&apos;s Enquiry No</strong></td><td style={{ border: 'none', padding: '4px 0' }}></td></tr>
+            <tr><td style={{ border: 'none', padding: '4px 0' }}><strong>Terms Of Payment</strong></td><td style={{ border: 'none', padding: '4px 0' }}></td></tr>
+            <tr><td style={{ border: 'none', padding: '4px 0' }}><strong>Inco Terms</strong></td><td style={{ border: 'none', padding: '4px 0' }}></td></tr>
+            <tr><td style={{ border: 'none', padding: '4px 0' }}><strong>Terms Of Delivery</strong></td><td style={{ border: 'none', padding: '4px 0' }}></td></tr>
+          </tbody>
+        </table>
+      </td>
     )
   )
 
@@ -365,32 +365,32 @@ function QuotationPageContent() {
       )}
 
       {!loading && !error && quotationData && (
-        <>
+        <div className="print-container">
           {templateType === 'EXPORT' ? (
-            <ExportQuotationContent 
-              data={quotationData} 
-              shippingData={shippingData} 
+            <ExportQuotationContent
+              data={quotationData}
+              shippingData={shippingData}
               billingData={billingData}
               rawQuotationData={rawQuotationData}
             />
           ) : templateType === 'SLS' ? (
-            <SLSQuotationContent 
-              data={quotationData} 
-              shippingData={shippingData} 
+            <SLSQuotationContent
+              data={quotationData}
+              shippingData={shippingData}
               billingData={billingData}
               rawQuotationData={rawQuotationData}
             />
           ) : templateType === 'GKD' ? (
-            <GKDQuotationContent 
-              data={quotationData} 
-              shippingData={shippingData} 
+            <GKDQuotationContent
+              data={quotationData}
+              shippingData={shippingData}
               billingData={billingData}
               rawQuotationData={rawQuotationData}
             />
           ) : templateType === 'BVK' ? (
-            <BVKQuotationContent 
-              data={quotationData} 
-              shippingData={shippingData} 
+            <BVKQuotationContent
+              data={quotationData}
+              shippingData={shippingData}
               billingData={billingData}
               rawQuotationData={rawQuotationData}
             />
@@ -411,23 +411,17 @@ function QuotationPageContent() {
               </tbody>
             </table>
           ) : (
-        <table className="print-doc-table" style={{ width: '100%', borderCollapse: 'collapse', border: 'none' }}>
-          <thead>
-            <tr>
-              {headerSupplierCell}
-              {headerQuotationCell}
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td colSpan={2} style={{ verticalAlign: 'top', border: 'none', padding: 0 }}>
-                <QuotationContent data={quotationData} shippingData={shippingData} billingData={billingData} rawQuotationData={rawQuotationData} />
-              </td>
-            </tr>
-          </tbody>
-        </table>
+            <table className="print-doc-table" style={{ width: '100%', borderCollapse: 'collapse', border: 'none' }}>
+              <tbody>
+                <tr>
+                  <td style={{ verticalAlign: 'top', border: 'none', padding: 0 }}>
+                    <QuotationContent data={quotationData} shippingData={shippingData} billingData={billingData} rawQuotationData={rawQuotationData} />
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           )}
-        </>
+        </div>
       )}
     </main>
   )

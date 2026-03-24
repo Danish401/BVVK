@@ -1,22 +1,4 @@
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
-}
-
-html,
-body {
-  max-width: 210mm;
-  margin: 0 auto;
-  min-height: 100%;
-  height: 100%;
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 11px;
-  color: #000;
-  background: #fff;
-}
-
-/* Screen-only: hide when printing */
+﻿/* Screen-only: hide when printing */
 .no-print {
   display: block;
 }
@@ -113,7 +95,7 @@ body {
     break-inside: avoid;
   }
 
-  /* A4, no browser margin — use full physical page; templates may add their own inset */
+  /* A4, no browser margin â€” use full physical page; templates may add their own inset */
   @page {
     size: A4;
     margin: 0;
@@ -143,55 +125,51 @@ body {
     box-sizing: border-box !important;
   }
 
-  /* A4 inset — align with PDF spec (25 mm all sides); templates with own padding opt out via :has */
-  .quotation-doc .print-container {
-    padding: 25mm !important;
-    box-sizing: border-box !important;
-  }
-
-  .quotation-doc .print-container:has(.export-quotation-container),
-  .quotation-doc .print-container:has(.bvk-quotation-container),
-  .quotation-doc .print-container:has(.gkd-quotation-container),
-  .quotation-doc .print-container:has(.sls-quotation-container) {
-    padding: 0 !important;
-  }
-
-  /* WI quotation: natural document height — no forced A4 fill (avoids huge gap before summary when few rows) */
+  /* First-sheet quotation block: fill one A4 height; flex passes height into nested table */
   .quotation-print-sheet {
-    min-height: 0 !important;
-    height: auto !important;
+    min-height: 297mm;
     box-sizing: border-box;
-    display: block !important;
+    display: flex;
+    flex-direction: column;
   }
 
   .quotation-print-sheet > .print-content {
-    display: block !important;
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
     margin-bottom: 0 !important;
   }
 
   .quotation-print-sheet .quotation-header-master-table {
+    flex: 1 1 auto;
     width: 100%;
-    height: auto !important;
+    min-height: 0;
+    align-self: stretch;
     table-layout: fixed;
   }
 
   .quotation-master-body-row--print-spacer {
-    display: none !important;
-    height: 0 !important;
-    line-height: 0 !important;
-    visibility: hidden !important;
+    display: table-row !important;
+    height: 100%;
+    page-break-inside: auto !important;
+    break-inside: auto !important;
   }
 
   .quotation-master-body-row--print-spacer td.quotation-print-spacer-cell {
     padding: 0 !important;
-    height: 0 !important;
-    border: none !important;
-    line-height: 0 !important;
-    font-size: 0 !important;
+    border-top: none !important;
+    border-bottom: none !important;
+    border-left: 1px solid #000 !important;
+    border-right: 1px solid #000 !important;
+    vertical-align: top;
+    height: 100%;
+    line-height: 0;
+    font-size: 0;
   }
 
   .print-footer {
-    margin-top: 0 !important;
+    margin-top: auto;
   }
 
   .no-print {
@@ -306,8 +284,7 @@ body {
   }
 
   /* Seamless quotation: allow tables to break across pages (dynamic line-item count) */
-  .quotation-content-section.quotation-content-section--seamless,
-  .performa-invoice-content-section.performa-invoice-content-section--seamless {
+  .quotation-content-section.quotation-content-section--seamless {
     page-break-inside: auto !important;
     break-inside: auto !important;
   }
@@ -322,7 +299,7 @@ body {
     break-inside: auto !important;
   }
 
-  /* Let body split across pages so master <thead> can repeat on continuation sheets (Chrome print) */
+  /* Let body split across pages so thead can repeat between goods and summary (Chrome) */
   .quotation-doc .quotation-header-master-table>tbody>tr.quotation-master-body-row {
     page-break-inside: auto !important;
     break-inside: auto !important;
@@ -334,7 +311,7 @@ body {
     break-inside: auto !important;
   }
 
-  /* Keep each line item on one page; table still breaks between rows → fills sheet like reference PDF */
+  /* Keep each line item on one page; table still breaks between rows â†’ fills sheet like reference PDF */
   .quotation-doc .quotation-content-section .goods-description-table tbody tr {
     page-break-inside: avoid !important;
     break-inside: avoid !important;
@@ -392,17 +369,6 @@ body {
     background-color: #f5f5f5 !important;
     font-weight: bold !important;
     border: 1px solid #000 !important;
-    padding: 5px 6px !important;
-    font-size: 10px !important;
-    line-height: 1.2 !important;
-    vertical-align: middle !important;
-  }
-
-  /* WMW line grid: compact spacing like reference PDF (not oversized screen padding) */
-  .quotation-doc .goods-description-table,
-  .performa-invoice-content-section .goods-description-table {
-    font-size: 10px !important;
-    line-height: 1.22 !important;
   }
 
   .goods-description-table tbody td.goods-description-table-body-cell {
@@ -410,9 +376,7 @@ body {
     border-bottom: none !important;
     border-left: 1px solid #000 !important;
     border-right: 1px solid #000 !important;
-    padding: 5px 6px !important;
-    font-size: 10px !important;
-    line-height: 1.22 !important;
+    padding: 12px 8px !important;
     vertical-align: top;
   }
 
@@ -435,45 +399,6 @@ body {
     border-bottom: none !important;
     border-left: 1px solid #000 !important;
     border-right: 1px solid #000 !important;
-    padding: 5px 6px !important;
-    font-size: 10px !important;
-    line-height: 1.22 !important;
-  }
-
-  /* Paginated goods (WI + Performa): 7 rows per sheet; optional fill padding on full pages */
-  .quotation-goods-pages-stack {
-    width: 100%;
-    margin: 0;
-  }
-
-  /*
-   * Continuation segments start a new sheet: use a full table frame like the first page.
-   * (Screen preview still uses seam rules in the non-print block below.)
-   */
-  .quotation-goods-pages-stack .quotation-goods-pages-break + .quotation-goods-pages-segment {
-    margin-top: 0 !important;
-    padding-top: 0 !important;
-  }
-
-  .quotation-goods-pages-stack .quotation-goods-pages-break + .quotation-goods-pages-segment .goods-description-table {
-    border: 1px solid #000 !important;
-    border-top: 1px solid #000 !important;
-  }
-
-  .quotation-goods-pages-break {
-    page-break-after: always !important;
-    break-after: page !important;
-  }
-
-  .quotation-doc .goods-description-table .goods-description-table-desc-cell > div,
-  .performa-invoice-content-section .goods-description-table .goods-description-table-desc-cell > div {
-    margin: 0 !important;
-    line-height: 1.2 !important;
-  }
-
-  .quotation-doc .goods-description-table .goods-description-table-desc-cell > div + div,
-  .performa-invoice-content-section .goods-description-table .goods-description-table-desc-cell > div + div {
-    margin-top: 1px !important;
   }
 
   .quotation-content-section--seamless,
@@ -498,8 +423,6 @@ body {
   .quotation-doc .quotation-seamless-stack>.quotation-stack-table+.quotation-stack-segment,
   .quotation-doc .quotation-seamless-stack>.quotation-stack-segment+.quotation-stack-table,
   .quotation-doc .quotation-seamless-stack>.quotation-stack-segment+.quotation-stack-segment,
-  .quotation-doc .quotation-seamless-stack>.quotation-stack-segment+.quotation-goods-pages-stack,
-  .quotation-doc .quotation-seamless-stack>.quotation-goods-pages-stack+.quotation-stack-table,
   .quotation-doc .quotation-seamless-stack>.quotation-stack-table+.quotation-stack-amount-row,
   .quotation-doc .quotation-seamless-stack>.quotation-stack-table+.amount-in-words.quotation-stack-amount-row,
   .quotation-doc .quotation-seamless-stack>.quotation-stack-segment+.quotation-stack-amount-row,
@@ -521,7 +444,7 @@ body {
     box-sizing: border-box !important;
   }
 
-  /* Consignee / recipient — print: same compact rules + gray band */
+  /* Consignee / recipient â€” print: same compact rules + gray band */
   .quotation-doc .quotation-address-pair {
     font-size: 10px !important;
     line-height: 1.22 !important;
@@ -674,7 +597,7 @@ body {
     display: table-footer-group !important;
   }
 
-  /* ══ Export Template - Repeating Header on every printed page ══ */
+  /* â•â• Export Template - Repeating Header on every printed page â•â• */
   .export-quotation-container {
     max-width: 100% !important;
     width: 100% !important;
@@ -728,7 +651,7 @@ body {
   display: table-footer-group;
 }
 
-/* ══ Export Template - Repeating Header on every printed page ══ */
+/* â•â• Export Template - Repeating Header on every printed page â•â• */
 .export-print-table thead.export-print-header-row {
   display: table-header-group;
 }
@@ -752,7 +675,7 @@ body {
   vertical-align: top;
 }
 
-/* No horizontal rules between rows — use vertical padding for invisible breathing room between line items */
+/* No horizontal rules between rows â€” use vertical padding for invisible breathing room between line items */
 .quotation-doc .goods-description-table tbody td.goods-description-table-body-cell,
 .goods-description-table tbody td.goods-description-table-body-cell {
   border-top: none !important;
@@ -787,13 +710,13 @@ body {
   border-right: 1px solid #000 !important;
 }
 
-/* ── Seamless quotation grid (no gaps between stacked tables, like PDF reference) ── */
+/* â”€â”€ Seamless quotation grid (no gaps between stacked tables, like PDF reference) â”€â”€ */
 .quotation-doc .quotation-content-section--seamless {
   padding: 0 0 12px !important;
   border: none !important;
 }
 
-/* ── Quotation header (invoice): full-width title row + supplier | bordered meta ── */
+/* â”€â”€ Quotation header (invoice): full-width title row + supplier | bordered meta â”€â”€ */
 .quotation-doc table.quotation-header-master-table {
   border-collapse: collapse !important;
   border: none !important;
@@ -871,12 +794,12 @@ body {
   border-bottom: none !important;
 }
 
-/* Seam: address row (thead) + goods block (tbody) share one outer rule */
-.quotation-doc .quotation-header-master-table tbody .quotation-seamless-stack > .quotation-goods-pages-stack > .quotation-goods-pages-segment:first-child .goods-description-table.quotation-stack-table {
+/* Seam: address row (thead) + goods table (tbody) share one outer rule */
+.quotation-doc .quotation-header-master-table tbody .quotation-seamless-stack>.goods-description-table.quotation-stack-table:first-child {
   margin-top: -1px !important;
 }
 
-/* Seam: goods row + summary row (separate <tr>) — collapse double rule */
+/* Seam: goods row + summary row (separate <tr>) â€” collapse double rule */
 .quotation-doc .quotation-header-master-table tbody tr.quotation-master-body-row--summary .quotation-seamless-stack>.quotation-summary-block:first-child {
   margin-top: -1px !important;
 }
@@ -1039,7 +962,7 @@ body {
   box-sizing: border-box;
 }
 
-/* Consignee / recipient: compact invoice layout — gray title band, tight address, State/GST grid */
+/* Consignee / recipient: compact invoice layout â€” gray title band, tight address, State/GST grid */
 .quotation-doc .quotation-address-pair {
   display: flex;
   width: 100%;
@@ -1150,7 +1073,7 @@ body {
   width: 14%;
 }
 
-/* ── Quotation bottom summary: validity + total | HSN/notes + tax | amount in words | remarks ── */
+/* â”€â”€ Quotation bottom summary: validity + total | HSN/notes + tax | amount in words | remarks â”€â”€ */
 .quotation-doc {
   --quotation-rule: 1px solid #000;
 }
@@ -1176,7 +1099,7 @@ body {
   text-align: left;
 }
 
-/* Align with goods table: cols 5–6 = Rate/SQM + Amount INR */
+/* Align with goods table: cols 5â€“6 = Rate/SQM + Amount INR */
 .quotation-doc .quotation-summary-block .qs-cell--validity {
   font-size: 10px;
   line-height: 1.22;
@@ -1248,7 +1171,7 @@ body {
   line-height: 1.22;
 }
 
-/* Tax / charge columns (5–6): align with reference invoice — middle vertical align, clear divider from col 4 */
+/* Tax / charge columns (5â€“6): align with reference invoice â€” middle vertical align, clear divider from col 4 */
 .quotation-doc .quotation-summary-block .qs-cell.qs-tax-label {
   font-size: 10px;
   line-height: 1.2;
@@ -1383,13 +1306,11 @@ body {
   line-height: 1.2;
 }
 
-/* Pull adjacent bordered blocks together so shared horizontal rules don’t double up */
+/* Pull adjacent bordered blocks together so shared horizontal rules donâ€™t double up */
 .quotation-doc .quotation-seamless-stack>.quotation-stack-table+.quotation-stack-table,
 .quotation-doc .quotation-seamless-stack>.quotation-stack-table+.quotation-stack-segment,
 .quotation-doc .quotation-seamless-stack>.quotation-stack-segment+.quotation-stack-table,
 .quotation-doc .quotation-seamless-stack>.quotation-stack-segment+.quotation-stack-segment,
-.quotation-doc .quotation-seamless-stack>.quotation-stack-segment+.quotation-goods-pages-stack,
-.quotation-doc .quotation-seamless-stack>.quotation-goods-pages-stack+.quotation-stack-table,
 .quotation-doc .quotation-seamless-stack>.quotation-stack-table+.quotation-stack-amount-row,
 .quotation-doc .quotation-seamless-stack>.quotation-stack-table+.amount-in-words.quotation-stack-amount-row,
 .quotation-doc .quotation-seamless-stack>.quotation-stack-segment+.quotation-stack-amount-row,
@@ -1402,28 +1323,6 @@ body {
 .quotation-doc .quotation-seamless-stack>.quotation-stack-amount-row+.quotation-stack-segment,
 .quotation-doc .quotation-seamless-stack>.amount-in-words.quotation-stack-amount-row+.quotation-stack-segment {
   margin-top: -1px !important;
-}
-
-/* Paginated goods stack: on screen, stack segments with a single shared top rule (print uses full frame per sheet) */
-.quotation-goods-pages-stack {
-  width: 100%;
-  margin: 0;
-}
-
-.quotation-goods-pages-stack .quotation-goods-pages-break + .quotation-goods-pages-segment {
-  margin-top: -1px;
-}
-
-.quotation-goods-pages-stack .quotation-goods-pages-break + .quotation-goods-pages-segment .goods-description-table {
-  border-top: none;
-}
-
-/* Long / dynamic description text: wrap inside Description Of Goods column */
-.goods-description-table .goods-description-table-desc-cell {
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  word-break: break-word;
-  max-width: 100%;
 }
 
 .quotation-doc .quotation-seamless-stack>.quotation-stack-amount-row,
@@ -1462,7 +1361,7 @@ body {
 }
 
 /*
- * Quotation doc: no blanket table/cell borders — they stack with nested grids (double lines in PDF).
+ * Quotation doc: no blanket table/cell borders â€” they stack with nested grids (double lines in PDF).
  */
 .quotation-doc table {
   width: 100%;
