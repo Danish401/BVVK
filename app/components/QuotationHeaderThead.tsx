@@ -18,6 +18,9 @@ export default function QuotationHeaderThead({
 
   return (
     <thead className="repeating-header quotation-header-thead">
+      <tr className="print-page-top-spacer" aria-hidden="true">
+        <td colSpan={2} />
+      </tr>
       <tr className="quotation-header-tr quotation-header-tr--title">
         <td className="quotation-header-td quotation-header-td--title" colSpan={2}>
           QUOTATION

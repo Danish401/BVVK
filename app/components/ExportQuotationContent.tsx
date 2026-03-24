@@ -174,6 +174,9 @@ export default function ExportQuotationContent({ data, shippingData, billingData
 
           {/* ══ REPEATING HEADER ══ */}
           <thead className="export-print-header-row">
+            <tr className="print-page-top-spacer" aria-hidden="true">
+              <td colSpan={8} />
+            </tr>
             <tr>
               <td colSpan={8} style={{ border: 'none', padding: 0, margin: 0 }}>
                 <div className="export-print-header" style={{ marginBottom: '15px', marginLeft: 0, marginRight: 0, padding: 0 }}>

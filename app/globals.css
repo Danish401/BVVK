@@ -4,6 +4,20 @@
   margin: 0;
 }
 
+/* Printed quotation: top inset on every sheet (theader spacer + goods continuation segments). Match A4 side inset (25mm). */
+:root {
+  --quotation-print-top-inset: 25mm;
+}
+
+/*
+ * Print page box — must be top-level (not inside @media print) or Chrome ignores it.
+ * margin: 0 = no browser-added margins (user can set "Margins: None" in print dialog too).
+ */
+@page {
+  size: A4;
+  margin: 0;
+}
+
 html,
 body {
   max-width: 210mm;
@@ -14,6 +28,11 @@ body {
   font-size: 11px;
   color: #000;
   background: #fff;
+}
+
+/* Repeating <thead> spacer: hidden on screen, height set in @media print */
+.print-page-top-spacer {
+  display: none !important;
 }
 
 /* Screen-only: hide when printing */
@@ -98,7 +117,7 @@ body {
     border: none !important;
     max-width: 100% !important;
     width: 100% !important;
-    padding: 5mm 10mm !important;
+    padding: 0 10mm 5mm 10mm !important;
   }
 
   /* Prevent page breaks inside sections - move whole div to next page */
@@ -113,19 +132,14 @@ body {
     break-inside: avoid;
   }
 
-  /* A4, no browser margin — use full physical page; templates may add their own inset */
-  @page {
-    size: A4;
-    margin: 0;
-  }
-
   body {
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
   }
 
   html,
-  body {
+  body,
+  main.quotation-doc {
     max-width: none !important;
     width: 100% !important;
     height: auto !important;
@@ -143,9 +157,9 @@ body {
     box-sizing: border-box !important;
   }
 
-  /* A4 inset — align with PDF spec (25 mm all sides); templates with own padding opt out via :has */
+  /* Sides/bottom 25mm; top comes from --quotation-print-top-inset (thead spacer + continuation segments). */
   .quotation-doc .print-container {
-    padding: 25mm !important;
+    padding: 0 25mm 25mm 25mm !important;
     box-sizing: border-box !important;
   }
 
@@ -450,8 +464,20 @@ body {
    * Continuation segments start a new sheet: use a full table frame like the first page.
    * (Screen preview still uses seam rules in the non-print block below.)
    */
+  /*
+   * Goods are split into segments with page-break-after; master <thead> often does not repeat
+   * when the break is inside the cell — restore the same top inset as page 1 (A4 / --quotation-print-top-inset).
+   */
   .quotation-goods-pages-stack .quotation-goods-pages-break + .quotation-goods-pages-segment {
     margin-top: 0 !important;
+    padding-top: var(--quotation-print-top-inset) !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Injected master thead already includes .print-page-top-spacer — avoid double top gap. */
+  .quotation-goods-pages-stack
+    .quotation-goods-pages-break
+    + .quotation-goods-pages-segment.quotation-goods-pages-segment--master-header-continuation {
     padding-top: 0 !important;
   }
 
@@ -463,6 +489,23 @@ body {
   .quotation-goods-pages-break {
     page-break-after: always !important;
     break-after: page !important;
+  }
+
+  /* Continuation header: inside goods table thead so it reliably shows when table starts on new page. */
+  .quotation-continuation-header-row {
+    display: table-row !important;
+  }
+
+  .quotation-continuation-header-row td {
+    display: table-cell !important;
+    padding: 0 !important;
+    vertical-align: top !important;
+  }
+
+  .quotation-goods-continuation-inline {
+    display: table !important;
+    width: 100% !important;
+    border-collapse: collapse !important;
   }
 
   .quotation-doc .goods-description-table .goods-description-table-desc-cell > div,
@@ -583,7 +626,7 @@ body {
   .gkd-quotation-container {
     max-width: 100% !important;
     width: 100% !important;
-    padding: 5mm 10mm !important;
+    padding: 0 10mm 5mm 10mm !important;
   }
 
   .gkd-print-table {
@@ -633,7 +676,7 @@ body {
   .bvk-quotation-container {
     max-width: 100% !important;
     width: 100% !important;
-    padding: 5mm 10mm !important;
+    padding: 0 10mm 5mm 10mm !important;
   }
 
   .bvk-print-table {
@@ -678,7 +721,27 @@ body {
   .export-quotation-container {
     max-width: 100% !important;
     width: 100% !important;
-    padding: 5mm 10mm !important;
+    padding: 0 10mm 5mm 10mm !important;
+  }
+
+  /* Repeats with document <thead> on every printed page */
+  .print-page-top-spacer {
+    display: table-row !important;
+    height: var(--quotation-print-top-inset) !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  .print-page-top-spacer td {
+    display: table-cell !important;
+    height: var(--quotation-print-top-inset) !important;
+    min-height: var(--quotation-print-top-inset) !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    vertical-align: top !important;
+    line-height: 0 !important;
+    font-size: 0 !important;
   }
 
   .export-print-table {
@@ -791,6 +854,13 @@ body {
 .quotation-doc .quotation-content-section--seamless {
   padding: 0 0 12px !important;
   border: none !important;
+}
+
+/* Continuation header row: always show (needed for print; screen preview shows each page's header). */
+
+/* Goods master table → summary master table (second table has no thead → no QUOTATION on summary-only sheets). */
+.quotation-doc .quotation-summary-follow-master-table {
+  margin-top: -1px !important;
 }
 
 /* ── Quotation header (invoice): full-width title row + supplier | bordered meta ── */

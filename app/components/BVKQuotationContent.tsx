@@ -69,6 +69,9 @@ export default function BVKQuotationContent({ data, shippingData, billingData, r
         <table className="bvk-print-table" style={{ width: '100%', borderCollapse: 'collapse', border: 'none' }}>
           {/* Header - Repeats on every page in print */}
           <thead className="bvk-print-header-row">
+            <tr className="print-page-top-spacer" aria-hidden="true">
+              <td colSpan={2} />
+            </tr>
             <tr>
               <td colSpan={2} style={{ border: 'none', padding: 0, verticalAlign: 'top' }}>
                 <div className="bvk-print-header" style={{ marginBottom: '20px' }}>

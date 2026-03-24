@@ -1,8 +1,12 @@
 'use client'
 
-import type { QuotationLineItem } from '@/lib/types'
+import type { QuotationData, QuotationLineItem } from '@/lib/types'
 import { chunkLineItems, GOODS_ROWS_PER_PRINT_PAGE } from '@/lib/quotation-line-item-display'
 import GoodsDescriptionLineRow from './GoodsDescriptionLineRow'
+import QuotationHeaderThead from './QuotationHeaderThead'
+
+/** Omit duplicate master header on the last N goods segments (e.g. tail pages before summary / conditions). */
+const MASTER_HEADER_OMIT_LAST_GOODS_SEGMENTS = 2
 
 export interface GoodsDescriptionPaginatedBlockProps {
   lineItems: QuotationLineItem[]
@@ -10,20 +14,40 @@ export interface GoodsDescriptionPaginatedBlockProps {
   totalFoot?: { currency: string; amountFormatted: string }
   /** Performa uses 8px cell padding; WI omits for default CSS. */
   cellPaddingPx?: number
+  /**
+   * WMW quotation: print-only duplicate of the master header before continuation goods segments.
+   * (The outer table thead does not repeat when the page break is inside the cell.)
+   */
+  masterQuotationHeaderProps?: {
+    data: QuotationData
+    shippingData?: any
+    billingData?: any
+  }
 }
 
 export default function GoodsDescriptionPaginatedBlock({
   lineItems,
   totalFoot,
   cellPaddingPx,
+  masterQuotationHeaderProps,
 }: GoodsDescriptionPaginatedBlockProps) {
   const items = lineItems ?? []
   const chunks = chunkLineItems(items, GOODS_ROWS_PER_PRINT_PAGE)
+
+  const showInjectedMasterHeader = (pageIdx: number) => {
+    if (!masterQuotationHeaderProps || pageIdx === 0) return false
+    const n = chunks.length
+    if (n < MASTER_HEADER_OMIT_LAST_GOODS_SEGMENTS + 1) return true
+    const tailStart = n - MASTER_HEADER_OMIT_LAST_GOODS_SEGMENTS
+    return pageIdx < tailStart
+  }
 
   return (
     <div className="quotation-goods-pages-stack">
       {chunks.map((chunk, pageIdx) => {
         const isLastChunk = pageIdx === chunks.length - 1
+
+        const injectedMaster = showInjectedMasterHeader(pageIdx)
 
         return (
           <div
@@ -31,6 +55,7 @@ export default function GoodsDescriptionPaginatedBlock({
             className={[
               'quotation-goods-pages-segment',
               !isLastChunk ? 'quotation-goods-pages-break' : '',
+              injectedMaster ? 'quotation-goods-pages-segment--master-header-continuation' : '',
             ]
               .filter(Boolean)
               .join(' ')}
@@ -40,6 +65,23 @@ export default function GoodsDescriptionPaginatedBlock({
               style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000' }}
             >
               <thead style={{ display: 'table-header-group' }}>
+                {/* Inline header: inside same thead so it reliably appears when this table starts on a new page. */}
+                {injectedMaster ? (
+                  <tr className="quotation-continuation-header-row">
+                    <td colSpan={6} style={{ padding: 0, border: 'none', verticalAlign: 'top' }}>
+                      <table
+                        className="quotation-header-master-table quotation-goods-continuation-inline"
+                        style={{ width: '100%', borderCollapse: 'collapse' }}
+                      >
+                        <QuotationHeaderThead
+                          data={masterQuotationHeaderProps!.data}
+                          shippingData={masterQuotationHeaderProps!.shippingData}
+                          billingData={masterQuotationHeaderProps!.billingData}
+                        />
+                      </table>
+                    </td>
+                  </tr>
+                ) : null}
                 <tr>
                   <th
                     style={{

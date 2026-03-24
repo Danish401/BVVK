@@ -81,6 +81,9 @@ export default function GKDQuotationContent({ data, shippingData, billingData, r
         <table className="gkd-print-table" style={{ width: '100%', borderCollapse: 'collapse', border: 'none' }}>
           {/* Header - Repeats on every page in print */}
           <thead className="gkd-print-header-row">
+            <tr className="print-page-top-spacer" aria-hidden="true">
+              <td colSpan={2} />
+            </tr>
             <tr>
               <td colSpan={2} style={{ border: 'none', padding: 0, verticalAlign: 'top' }}>
                 <div className="gkd-print-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>

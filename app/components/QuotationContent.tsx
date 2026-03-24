@@ -34,14 +34,28 @@ export default function QuotationContent({ data, shippingData, billingData, rawQ
       {/* Quotation Content Div - All content until Remarks */}
       <div className="quotation-print-sheet">
         <div className="quotation-content-section quotation-content-section--seamless print-content" style={{ marginBottom: '24px' }}>
+        {/*
+          Goods in their own table so the master thead can repeat only for goods pages.
+          Summary/footer in a follow-up table without thead so new sheets do not repeat QUOTATION.
+        */}
         <table className="quotation-header-master-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
           <QuotationHeaderThead data={data} shippingData={shippingData} billingData={billingData} />
           <tbody>
             <tr className="quotation-master-body-row quotation-master-body-row--goods">
               <td colSpan={2} className="quotation-seamless-stack">
-                <GoodsDescriptionPaginatedBlock lineItems={lineItems} />
+                <GoodsDescriptionPaginatedBlock
+                  lineItems={lineItems}
+                  masterQuotationHeaderProps={{ data, shippingData, billingData }}
+                />
               </td>
             </tr>
+          </tbody>
+        </table>
+        <table
+          className="quotation-header-master-table quotation-summary-follow-master-table"
+          style={{ width: '100%', borderCollapse: 'collapse' }}
+        >
+          <tbody>
             <tr className="quotation-master-body-row quotation-master-body-row--summary">
               <td colSpan={2} className="quotation-seamless-stack">
                 <QuotationSummarySection
