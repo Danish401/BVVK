@@ -60,6 +60,11 @@ body {
   display: table-header-group;
 }
 
+/* Show repeating header on screen (Performa) */
+.performa-invoice-content-section .repeating-header {
+  display: table-header-group;
+}
+
 /* Quotation title styling */
 .quotation-title {
   display: block;
@@ -93,9 +98,11 @@ body {
 
 /* Performa Invoice content section */
 .performa-invoice-content-section {
-  border: 1px solid #000;
+  border: none;
+  outline: none;
+  box-shadow: none;
   padding: 16px;
-  margin-bottom: 24px;
+  margin-bottom: 8px;
   page-break-inside: avoid;
 }
 
@@ -255,6 +262,19 @@ body {
     display: table-cell;
   }
 
+  /* Performa Invoice: allow header row to repeat on every printed page */
+  .performa-invoice-content-section .repeating-header {
+    display: table-header-group !important;
+  }
+
+  .performa-invoice-content-section .repeating-header tr {
+    display: table-row;
+  }
+
+  .performa-invoice-content-section .repeating-header td {
+    display: table-cell;
+  }
+
   /* Hide header in conditions section */
   .conditions-for-print .repeating-header,
   .conditions-for-print .screen-only-header {
@@ -312,11 +332,18 @@ body {
   }
 
   /* Prevent sections from splitting across pages (Performa / generic) */
-  .quotation-content-section,
+  .quotation-content-section {
+    page-break-inside: avoid !important;
+    /* WI/Quotation: remove wrapper border to avoid double lines */
+    border: none !important;
+  }
+
   .performa-invoice-content-section {
     page-break-inside: avoid !important;
-    /* Remove all borders in print */
+    /* Outer wrapper border removed; main invoice table keeps visible border */
     border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
   }
 
   /* Seamless quotation: allow tables to break across pages (dynamic line-item count) */
@@ -1218,6 +1245,62 @@ body {
 
 .quotation-doc .quotation-address-state-grid__col--c {
   width: 14%;
+}
+
+/* Consignee / recipient table variant: enforce visible cell borders on screen */
+.quotation-doc .quotation-address-pair-table {
+  width: 100%;
+  max-width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  border-spacing: 0;
+  margin: 0;
+  border: 1px solid #000 !important;
+  font-size: 10px;
+  line-height: 1.22;
+  box-sizing: border-box;
+}
+
+.quotation-doc .quotation-address-pair-table th,
+.quotation-doc .quotation-address-pair-table td {
+  border: 1px solid #000 !important;
+  padding: 3px 6px;
+  vertical-align: middle;
+  text-align: left;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.quotation-doc .qap-header {
+  font-weight: bold;
+  background-color: #ececec;
+  padding: 5px 8px !important;
+}
+
+.quotation-doc .qap-label {
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.quotation-doc .qap-value {
+  font-weight: normal;
+}
+
+.quotation-doc .qap-address-cell {
+  vertical-align: top !important;
+  padding: 0 !important;
+}
+
+.quotation-doc .qap-header--left,
+.quotation-doc .qap-address-cell--left,
+.quotation-doc .qap-cell--left {
+  border-right: 1px solid #000 !important;
+}
+
+.quotation-doc .qap-header--right,
+.quotation-doc .qap-address-cell--right,
+.quotation-doc .qap-cell--right {
+  border-left: 0 !important;
 }
 
 /* ── Quotation bottom summary: validity + total | HSN/notes + tax | amount in words | remarks ── */

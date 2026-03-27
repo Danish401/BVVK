@@ -141,7 +141,7 @@ export default function BVKQuotationContent({ data, shippingData, billingData, r
 
                 {/* Item Table */}
                 <div style={{ marginBottom: '20px' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px', tableLayout: 'fixed', wordWrap: 'break-word' }}>
                     <thead>
                       <tr>
                         <th style={{ border: '1px solid #000', padding: '8px', textAlign: 'left', fontWeight: 'bold', width: '5%' }}>Item</th>

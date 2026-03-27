@@ -5,8 +5,8 @@ import { chunkLineItems, GOODS_ROWS_PER_PRINT_PAGE } from '@/lib/quotation-line-
 import GoodsDescriptionLineRow from './GoodsDescriptionLineRow'
 import QuotationHeaderThead from './QuotationHeaderThead'
 
-/** Omit duplicate master header on the last N goods segments (e.g. tail pages before summary / conditions). */
-const MASTER_HEADER_OMIT_LAST_GOODS_SEGMENTS = 2
+/** We want the master header to repeat on ALL goods segments. */
+const MASTER_HEADER_OMIT_LAST_GOODS_SEGMENTS = 0
 
 export interface GoodsDescriptionPaginatedBlockProps {
   lineItems: QuotationLineItem[]
@@ -19,6 +19,7 @@ export interface GoodsDescriptionPaginatedBlockProps {
    * (The outer table thead does not repeat when the page break is inside the cell.)
    */
   masterQuotationHeaderProps?: {
+    title?: string
     data: QuotationData
     shippingData?: any
     billingData?: any
@@ -60,28 +61,24 @@ export default function GoodsDescriptionPaginatedBlock({
               .filter(Boolean)
               .join(' ')}
           >
+            {injectedMaster ? (
+              <table
+                className="quotation-header-master-table quotation-goods-continuation-inline"
+                style={{ width: '100%', borderCollapse: 'collapse', pageBreakInside: 'avoid' }}
+              >
+                <QuotationHeaderThead
+                  title={masterQuotationHeaderProps!.title}
+                  data={masterQuotationHeaderProps!.data}
+                  shippingData={masterQuotationHeaderProps!.shippingData}
+                  billingData={masterQuotationHeaderProps!.billingData}
+                />
+              </table>
+            ) : null}
             <table
               className="goods-description-table quotation-stack-table"
-              style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000' }}
+              style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000', marginTop: injectedMaster ? '-1px' : '0', tableLayout: 'fixed', wordWrap: 'break-word' }}
             >
               <thead style={{ display: 'table-header-group' }}>
-                {/* Inline header: inside same thead so it reliably appears when this table starts on a new page. */}
-                {injectedMaster ? (
-                  <tr className="quotation-continuation-header-row">
-                    <td colSpan={6} style={{ padding: 0, border: 'none', verticalAlign: 'top' }}>
-                      <table
-                        className="quotation-header-master-table quotation-goods-continuation-inline"
-                        style={{ width: '100%', borderCollapse: 'collapse' }}
-                      >
-                        <QuotationHeaderThead
-                          data={masterQuotationHeaderProps!.data}
-                          shippingData={masterQuotationHeaderProps!.shippingData}
-                          billingData={masterQuotationHeaderProps!.billingData}
-                        />
-                      </table>
-                    </td>
-                  </tr>
-                ) : null}
                 <tr>
                   <th
                     style={{

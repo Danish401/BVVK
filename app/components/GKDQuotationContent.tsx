@@ -145,7 +145,7 @@ export default function GKDQuotationContent({ data, shippingData, billingData, r
 
                 {/* Item Details Table */}
                 <div style={{ marginBottom: '20px' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000', fontSize: '11px' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000', fontSize: '11px', tableLayout: 'fixed', wordWrap: 'break-word' }}>
                     <thead>
                       <tr>
                         <th style={{ border: '1px solid #000', padding: '8px', textAlign: 'center', fontWeight: 'bold', backgroundColor: '#f0f0f0', width: '5%' }}>Item</th>

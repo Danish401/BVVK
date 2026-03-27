@@ -1,4 +1,4 @@
-﻿/* Screen-only: hide when printing */
+/* Screen-only: hide when printing */
 .no-print {
   display: block;
 }
@@ -56,7 +56,6 @@
 
 /* Performa Invoice content section */
 .performa-invoice-content-section {
-  border: 1px solid #000;
   padding: 16px;
   margin-bottom: 24px;
   page-break-inside: avoid;
@@ -711,7 +710,8 @@
 }
 
 /* â”€â”€ Seamless quotation grid (no gaps between stacked tables, like PDF reference) â”€â”€ */
-.quotation-doc .quotation-content-section--seamless {
+.quotation-doc .quotation-content-section--seamless,
+.quotation-doc .performa-invoice-content-section--seamless {
   padding: 0 0 12px !important;
   border: none !important;
 }
@@ -962,44 +962,52 @@
   box-sizing: border-box;
 }
 
-/* Consignee / recipient: compact invoice layout â€” gray title band, tight address, State/GST grid */
-.quotation-doc .quotation-address-pair {
-  display: flex;
+/* â”€â”€ Unified Table Layout for Consignee / Recipient â”€â”€ */
+.quotation-doc .quotation-address-pair-table {
   width: 100%;
-  align-items: stretch;
-  border: 1px solid #000;
-  box-sizing: border-box;
+  max-width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  border-spacing: 0;
   margin: 0;
-  min-height: 0;
+  border: 1px solid #000;
   font-size: 10px;
   line-height: 1.22;
-}
-
-.quotation-doc .quotation-address-pair__col {
-  flex: 1 1 50%;
-  min-width: 0;
-  padding: 0;
-  margin: 0;
   box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
 }
 
-.quotation-doc .quotation-address-pair__col:first-child {
-  border-right: 1px solid #000;
-}
-
-.quotation-doc .quotation-address-pair__header {
-  font-weight: bold;
-  font-size: 10px;
-  line-height: 1.2;
-  padding: 4px 6px;
-  margin: 0;
+.quotation-doc .quotation-address-pair-table th,
+.quotation-doc .quotation-address-pair-table td {
+  border: 1px solid #000;
+  padding: 3px 6px;
+  vertical-align: middle;
   text-align: left;
-  background-color: #e9e9e9;
-  border-bottom: 1px solid #000;
-  flex-shrink: 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.quotation-doc .qap-header {
+  font-weight: bold;
+  background-color: #ececec;
+  padding: 5px 8px;
+  border: 1px solid #000;
+}
+
+.quotation-doc .qap-header--left,
+.quotation-doc .qap-address-cell--left,
+.quotation-doc .qap-cell--left {
+  border-right: 1px solid #000 !important;
+}
+
+.quotation-doc .qap-header--right,
+.quotation-doc .qap-address-cell--right,
+.quotation-doc .qap-cell--right {
+  border-left: 0 !important;
+}
+
+.quotation-doc .qap-address-cell {
+  vertical-align: top;
+  padding: 0;
 }
 
 .quotation-doc .quotation-address-plain {
@@ -1007,7 +1015,6 @@
   padding: 3px 6px 4px;
   line-height: 1.22;
   font-size: 10px;
-  flex-shrink: 0;
 }
 
 .quotation-doc .quotation-address-plain__line {
@@ -1030,47 +1037,14 @@
   line-height: 1.22;
 }
 
-/* Inner State / GST table: no outer table border (cells form continuous grid) */
-.quotation-doc .quotation-address-pair .quotation-address-state-grid {
-  width: 100%;
-  max-width: 100%;
-  border-collapse: collapse;
-  border-spacing: 0;
-  margin: 0;
-  border: none !important;
-  font-size: 10px;
-  line-height: 1.2;
-  flex-shrink: 0;
-}
-
-.quotation-doc .quotation-address-state-grid th,
-.quotation-doc .quotation-address-state-grid td {
-  border: 1px solid #000;
-  padding: 2px 5px;
-  vertical-align: middle;
-  text-align: left;
-}
-
-.quotation-doc .quotation-address-state-grid__label {
+.quotation-doc .qap-label {
   font-weight: bold;
   background: #fff;
   white-space: nowrap;
 }
 
-.quotation-doc .quotation-address-state-grid__value {
+.quotation-doc .qap-value {
   font-weight: normal;
-}
-
-.quotation-doc .quotation-address-state-grid__col--a {
-  width: 24%;
-}
-
-.quotation-doc .quotation-address-state-grid__col--b {
-  width: 18%;
-}
-
-.quotation-doc .quotation-address-state-grid__col--c {
-  width: 14%;
 }
 
 /* â”€â”€ Quotation bottom summary: validity + total | HSN/notes + tax | amount in words | remarks â”€â”€ */

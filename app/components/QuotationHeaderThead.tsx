@@ -6,10 +6,12 @@ import QuotationAddressPair from './QuotationAddressPair'
  * Renders as <thead class="repeating-header"> so the block can repeat at the top of each printed page.
  */
 export default function QuotationHeaderThead({
+  title = 'QUOTATION',
   data,
   shippingData,
   billingData,
 }: {
+  title?: string
   data: QuotationData
   shippingData?: any
   billingData?: any
@@ -23,7 +25,7 @@ export default function QuotationHeaderThead({
       </tr>
       <tr className="quotation-header-tr quotation-header-tr--title">
         <td className="quotation-header-td quotation-header-td--title" colSpan={2}>
-          QUOTATION
+          {title}
         </td>
       </tr>
       <tr className="quotation-header-tr quotation-header-tr--main">
